@@ -548,12 +548,10 @@ protected:
 	std::unique_ptr<pxAppResources> m_Resources;
 
 public:
-#ifndef __LIBRETRO__
 	// Executor Thread for complex VM/System tasks.  This thread is used to execute such tasks
 	// in parallel to the main message pump, to allow the main pump to run without fear of
 	// blocked threads stalling the GUI.
 	ExecutorThread					SysExecutorThread;
-#endif
 	std::unique_ptr<SysCpuProviderPack> m_CpuProviders;
 	std::unique_ptr<SysMainMemory> m_VmReserve;
 
@@ -704,9 +702,9 @@ protected:
 	void HandleEvent(wxEvtHandler* handler, wxEventFunction func, wxEvent& event);
 
 	void OnScheduledTermination( wxTimerEvent& evt );
+	void OnSysExecutorTaskTimeout( wxTimerEvent& evt );
 #ifndef __LIBRETRO__
 	void OnEmuKeyDown( wxKeyEvent& evt );
-	void OnSysExecutorTaskTimeout( wxTimerEvent& evt );
 	void OnDestroyWindow( wxWindowDestroyEvent& evt );
 #endif
 	// ----------------------------------------------------------------------------
@@ -838,11 +836,7 @@ extern MainEmuFrame*	GetMainFramePtr();
 
 extern __aligned16 SysMtgsThread mtgsThread;
 extern __aligned16 AppCoreThread CoreThread;
-#ifdef __LIBRETRO__
-extern __aligned16 SysCorePlugins CorePlugins;
-#else
 extern __aligned16 AppCorePlugins CorePlugins;
-#endif
 
 extern void UI_UpdateSysControls();
 
@@ -854,10 +848,7 @@ extern void UI_EnableSysActions();
 
 extern void UI_DisableSysShutdown();
 
-#ifdef __LIBRETRO__
-#define AffinityAssert_AllowFrom_SysExecutor()
-#define AffinityAssert_DisallowFrom_SysExecutor()
-#else
+
 #define AffinityAssert_AllowFrom_SysExecutor() \
 	pxAssertMsg( wxGetApp().SysExecutorThread.IsSelf(), "Thread affinity violation: Call allowed from SysExecutor thread only." )
 
@@ -865,6 +856,5 @@ extern void UI_DisableSysShutdown();
 	pxAssertMsg( !wxGetApp().SysExecutorThread.IsSelf(), "Thread affinity violation: Call is *not* allowed from SysExecutor thread." )
 
 extern ExecutorThread& GetSysExecutorThread();
-#endif
 
 extern bool g_ConfigPanelChanged; //Indicates that the main config panel is open and holds unapplied changes.

@@ -64,14 +64,8 @@ void Pcsx2App::DetectCpuAndUserMode()
 
 	// force unload plugins loaded by the wizard.  If we don't do this the recompilers might
 	// fail to allocate the memory they need to function.
-#ifdef __LIBRETRO__
-	CoreThread.Cancel();
-	CorePlugins.Shutdown();
-	CorePlugins.Unload();
-#else
 	ShutdownPlugins();
 	UnloadPlugins();
-#endif
 }
 #ifndef __LIBRETRO__
 void Pcsx2App::OpenMainFrame()
@@ -225,11 +219,7 @@ void Pcsx2App::AllocateCoreStuffs()
 		}
 	}
 
-#ifdef __LIBRETRO__
-	LoadPluginsImmediate();
-#else
 	LoadPluginsPassive();
-#endif
 }
 
 
@@ -519,7 +509,6 @@ bool Pcsx2App::OnInit()
 		pxSizerFlags::SetBestPadding();
 		if( Startup.ForceConsole ) g_Conf->ProgLogBox.Visible = true;
 		OpenProgramLog();
-
 		AllocateCoreStuffs();
 		if( m_UseGUI ) OpenMainFrame();
 
@@ -624,9 +613,7 @@ void Pcsx2App::PrepForExit()
 	DispatchEvent( AppStatus_Exiting );
 
 	CoreThread.Cancel();
-#ifndef __LIBRETRO__
 	SysExecutorThread.ShutdownQueue();
-#endif
 
 	m_timer_Termination->Start( 500 );
 }
@@ -638,9 +625,7 @@ void Pcsx2App::CleanupRestartable()
 	AffinityAssert_AllowFrom_MainUI();
 
 	CoreThread.Cancel();
-#ifndef __LIBRETRO__
 	SysExecutorThread.ShutdownQueue();
-#endif
 	IdleEventDispatcher( L"Cleanup" );
 
 	if( g_Conf ) AppSaveSettings();
@@ -734,15 +719,15 @@ protected:
 	// the menus and make sure they're all consistent to the current emulation states.
 	void _DoIdle()
 	{
+#ifndef __LIBRETRO__
 		UI_UpdateSysControls();
+#endif
 	}
 };
 
 
 Pcsx2App::Pcsx2App() 
-#ifndef __LIBRETRO__
 	: SysExecutorThread( new SysEvtHandler() )
-#endif
 {
 	// Warning: Do not delete this comment block! Gettext will parse it to allow
 	// the translation of some wxWidget internal strings. -- greg

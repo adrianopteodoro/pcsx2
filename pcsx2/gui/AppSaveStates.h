@@ -17,7 +17,6 @@
 
 #include "App.h"
 #include "SaveState.h"
-#ifndef __LIBRETRO__
 #include "Saveslots.h"
 
 // --------------------------------------------------------------------------------------
@@ -56,7 +55,7 @@ protected:
 	void InvokeEvent();
 	void CleanupEvent();
 };
-#endif
+
 
 extern void StateCopy_SaveToFile( const wxString& file );
 extern void StateCopy_LoadFromFile( const wxString& file );

@@ -293,25 +293,13 @@ void SysMtgsThread::ExecuteTaskInThread()
 
 	RingBufferLock busy (*this);
 
-//	OpenPlugin();
 	while(true) {
 		busy.Release();
-#ifdef __LIBRETRO__
-		while (wxTheApp->HasPendingEvents())
-			wxTheApp->ProcessPendingEvents();
-
-		while (!m_sem_event.WaitWithoutYield(wxTimeSpan::Millisecond()))
-		{
-			while (wxTheApp->HasPendingEvents())
-				wxTheApp->ProcessPendingEvents();
-		}
-#else
 		// Performance note: Both of these perform cancellation tests, but pthread_testcancel
 		// is very optimized (only 1 instruction test in most cases), so no point in trying
 		// to avoid it.
 
 		m_sem_event.WaitWithoutYield();
-#endif
 		StateCheckInThread();
 		busy.Acquire();
 
@@ -319,9 +307,6 @@ void SysMtgsThread::ExecuteTaskInThread()
 		// ever be modified by this thread.
 		while( m_ReadPos.load(std::memory_order_relaxed) != m_WritePos.load(std::memory_order_acquire))
 		{
-//			while (wxTheApp->HasPendingEvents())
-//				wxTheApp->ProcessPendingEvents();
-
 			const unsigned int local_ReadPos = m_ReadPos.load(std::memory_order_relaxed);
 
 			pxAssert( local_ReadPos < RingBufferSize );

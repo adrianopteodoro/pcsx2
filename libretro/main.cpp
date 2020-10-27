@@ -265,6 +265,7 @@ void retro_init(void)
 	g_Conf = std::make_unique<AppConfig>();
 	i18n_SetLanguage(wxLANGUAGE_DEFAULT);
 	i18n_SetLanguagePath();
+	GetSysExecutorThread().Start();
 	pcsx2->DetectCpuAndUserMode();
 	pcsx2->AllocateCoreStuffs();
 	//	pcsx2->GetGameDatabase();
@@ -364,14 +365,9 @@ void retro_get_system_av_info(retro_system_av_info* info)
 void retro_reset(void)
 {
 	GetMTGS().FinishTaskInThread();
-
-	while (pcsx2->HasPendingEvents())
-		pcsx2->ProcessPendingEvents();
 	GetMTGS().ClosePlugin();
-	while (pcsx2->HasPendingEvents())
-		pcsx2->ProcessPendingEvents();
-
 	GetCoreThread().ResetQuick();
+	GetCoreThread().Resume();
 }
 
 static void context_reset()
@@ -384,15 +380,8 @@ static void context_reset()
 static void context_destroy()
 {
 	GetMTGS().FinishTaskInThread();
-
-	while (pcsx2->HasPendingEvents())
-		pcsx2->ProcessPendingEvents();
 	GetMTGS().ClosePlugin();
-
-	while (pcsx2->HasPendingEvents())
-		pcsx2->ProcessPendingEvents();
-	//	GetCoreThread().Suspend(true);
-	GetCoreThread().Pause();
+	GetCoreThread().Suspend();
 
 	printf("Context destroy\n");
 }
@@ -518,19 +507,8 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info* i
 
 void retro_unload_game(void)
 {
-	//	GetMTGS().FinishTaskInThread();
-	//		GetMTGS().ClosePlugin();
-	//	GetCoreThread().Suspend(true);
-	//			GetCoreThread().Cancel(true);
 	GetMTGS().FinishTaskInThread();
-
-	while (pcsx2->HasPendingEvents())
-		pcsx2->ProcessPendingEvents();
 	GetMTGS().ClosePlugin();
-
-	while (pcsx2->HasPendingEvents())
-		pcsx2->ProcessPendingEvents();
-	//	GetCoreThread().Suspend(true);
 	GetCoreThread().Pause();
 }
 
@@ -557,10 +535,11 @@ void retro_run(void)
 #endif
 	}
 
+	//	GetCoreThread().Resume();
+	GetMTGS().OpenPlugin();
+
 	RETRO_PERFORMANCE_INIT(pcsx2_run);
 	RETRO_PERFORMANCE_START(pcsx2_run);
-	GetCoreThread().Resume();
-	GetMTGS().OpenPlugin();
 
 	GetMTGS().ExecuteTaskInThread();
 

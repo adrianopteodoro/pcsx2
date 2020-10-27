@@ -35,6 +35,8 @@
 #endif
 #if wxUSE_GUI
 #include "Debugger/DisassemblyDialog.h"
+#else
+#include "DebugTools/Breakpoints.h"
 #endif
 #ifndef DISABLE_RECORDING
 #	include "Recording/InputRecordingControls.h"
@@ -563,19 +565,11 @@ void DoFmvSwitch(bool on)
 				viewport->DoResize();
 #endif
 	}
-#ifdef __LIBRETRO__
-	if (EmuConfig.Gamefixes.FMVinSoftwareHack) {
-		CoreThread.Pause();
-		renderswitch = !renderswitch;
-		CoreThread.Resume();
-	}
-#else
 	if (EmuConfig.Gamefixes.FMVinSoftwareHack) {
 		ScopedCoreThreadPause paused_core(new SysExecEvent_SaveSinglePlugin(PluginId_GS));
 		renderswitch = !renderswitch;
 		paused_core.AllowResume();
 	}
-#endif
 }
 
 void Pcsx2App::LogicalVsync()
@@ -612,6 +606,7 @@ void Pcsx2App::LogicalVsync()
 	// GS window belonging to the MTGS thread.
 	if( (PADupdate != NULL) && (GSopen2 != NULL) && (wxGetApp().GetGsFramePtr() != NULL) )
 		PADupdate(0);
+
 	while( const keyEvent* ev = PADkeyEvent() )
 	{
 		if( ev->key == 0 ) break;
@@ -894,11 +889,7 @@ void Pcsx2App::resetDebugger()
 void AppApplySettings( const AppConfig* oldconf )
 {
 	AffinityAssert_AllowFrom_MainUI();
-#ifdef __LIBRETRO__
-	CoreThread.Pause();
-#else
 	ScopedCoreThreadPause paused_core;
-#endif
 
 	g_Conf->Folders.ApplyDefaults();
 
@@ -933,12 +924,7 @@ void AppApplySettings( const AppConfig* oldconf )
 	#endif
 	sApp.DispatchEvent( AppStatus_SettingsApplied );
 
-#ifdef __LIBRETRO__
-//	CoreThread.Resume();
-#else
 	paused_core.AllowResume();
-#endif
-
 }
 
 // Invokes the specified Pcsx2App method, or posts the method to the main thread if the calling
@@ -1149,7 +1135,7 @@ void Pcsx2App::OnMainFrameClosed( wxWindowID id )
 	if( m_id_MainFrame != id ) return;
 	m_id_MainFrame = wxID_ANY;
 }
-
+#endif
 // --------------------------------------------------------------------------------------
 //  SysExecEvent_Execute
 // --------------------------------------------------------------------------------------
@@ -1202,7 +1188,9 @@ protected:
 		DbgCon.WriteLn( Color_Gray, "(SysExecute) received." );
 
 		CoreThread.ResetQuick();
+#if wxUSE_GUI
 		symbolMap.Clear();
+#endif
 		CBreakPoints::SetSkipFirst(0);
 
 		CDVDsys_SetFile(CDVD_SourceType::Iso, g_Conf->CurrentIso );
@@ -1235,34 +1223,7 @@ void Pcsx2App::SysExecute( CDVD_SourceType cdvdsrc, const wxString& elf_override
 	g_InputRecording.RecordingReset();
 #endif
 }
-#else
-void Pcsx2App::SysExecute()
-{
-	Pcsx2App::SysExecute(CDVD_SourceType::NoDisc);
-}
-void Pcsx2App::SysExecute( CDVD_SourceType cdvdsrc, const wxString& elf_override )
-{
-	ProcessMethod( AppSaveSettings );
 
-	// if something unloaded plugins since this messages was queued then it's best to ignore
-	// it, because apparently too much stuff is going on and the emulation states are wonky.
-	if( !CorePlugins.AreLoaded() ) return;
-
-	DbgCon.WriteLn( Color_Gray, "(SysExecute) received." );
-
-	CoreThread.ResetQuick();
-#if wxUSE_GUI
-	symbolMap.Clear();
-#endif
-	CDVDsys_SetFile(CDVD_SourceType::Iso, g_Conf->CurrentIso );
-	CDVDsys_ChangeSource( cdvdsrc);
-
-	if( !CoreThread.HasActiveMachine() )
-		CoreThread.SetElfOverride( elf_override );
-
-	CoreThread.Resume();
-}
-#endif
 // Returns true if there is a "valid" virtual machine state from the user's perspective.  This
 // means the user has started the emulator and not issued a full reset.
 // Thread Safety: The state of the system can change in parallel to execution of the
