@@ -480,7 +480,10 @@ void ExecutorThread::ExecuteTaskInThread()
 	while( true )
 	{
 		if( !pxAssertDev( m_EvtHandler, "Event handler has been deallocated during SysExecutor thread execution." ) ) return;
-
+#ifdef __LIBRETRO__
+		while(wxGetApp().HasPendingEvents())
+			wxGetApp().ProcessPendingEvents();
+#endif
 		m_EvtHandler->Idle();
 		m_EvtHandler->ProcessPendingEvents();
 		if( m_EvtHandler->IsShuttingDown() ) break;
