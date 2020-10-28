@@ -382,9 +382,13 @@ public:
 	void PostVsyncStart();
 
 	bool IsPluginOpened() const { return m_PluginOpened; }
-
+#ifdef __LIBRETRO__
+	void StepFrame();
+	void Flush();
+	void ExecuteTaskInThread(bool flush_all = false);
+#else
 	void ExecuteTaskInThread();
-	void FinishTaskInThread();
+#endif
 	void OpenPlugin();
 	void ClosePlugin();
 

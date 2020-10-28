@@ -260,7 +260,8 @@ void retro_init(void)
 #endif
 
 	InitCPUTicks();
-	pxDoAssert = AppDoAssert;
+	//	pxDoAssert = AppDoAssert;
+	pxDoAssert = NULL;
 	pxDoOutOfMemory = SysOutOfMemory_EmergencyResponse;
 	g_Conf = std::make_unique<AppConfig>();
 	i18n_SetLanguage(wxLANGUAGE_DEFAULT);
@@ -364,22 +365,22 @@ void retro_get_system_av_info(retro_system_av_info* info)
 
 void retro_reset(void)
 {
-	GetMTGS().FinishTaskInThread();
 	GetMTGS().ClosePlugin();
 	GetCoreThread().ResetQuick();
+	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
 }
 
 static void context_reset()
 {
 	printf("Context reset\n");
-	GetCoreThread().Resume();
 	GetMTGS().OpenPlugin();
+	GetCoreThread().Resume();
 	//	GSsetVsync(0);
 }
 static void context_destroy()
 {
-	GetMTGS().FinishTaskInThread();
+	//	GetCoreThread().Pause();
 	GetMTGS().ClosePlugin();
 	GetCoreThread().Suspend();
 
@@ -460,7 +461,10 @@ bool retro_load_game(const struct retro_game_info* game)
 	{
 		FILE* fp = fopen(game->path, "rb");
 		if (!fp)
+		{
+			log_cb(RETRO_LOG_ERROR, "Could not open File: %s\n", game->path);
 			return false;
+		}
 
 		fread(&magic, 4, 1, fp);
 		fclose(fp);
@@ -507,9 +511,9 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info* i
 
 void retro_unload_game(void)
 {
-	GetMTGS().FinishTaskInThread();
 	GetMTGS().ClosePlugin();
-	GetCoreThread().Pause();
+	GetCoreThread().Suspend();
+	//	GetCoreThread().Pause();
 }
 
 
@@ -541,23 +545,54 @@ void retro_run(void)
 	RETRO_PERFORMANCE_INIT(pcsx2_run);
 	RETRO_PERFORMANCE_START(pcsx2_run);
 
-	GetMTGS().ExecuteTaskInThread();
+	GetMTGS().StepFrame();
 
 	RETRO_PERFORMANCE_STOP(pcsx2_run);
 }
 
 size_t retro_serialize_size(void)
 {
-	return 0;
+	return Ps2MemSize::MainRam + Ps2MemSize::Scratch + Ps2MemSize::Hardware +
+			Ps2MemSize::IopRam + Ps2MemSize::IopHardware +
+			VU0_PROGSIZE + VU0_MEMSIZE + VU1_PROGSIZE + VU1_MEMSIZE +
+			_8mb;// + SPU2Savestate::SizeIt();
 }
 
 bool retro_serialize(void* data, size_t size)
 {
-	return false;
+	GetMTGS().StepFrame();
+	ScopedCoreThreadPause paused_core;
+	GetMTGS().Flush();
+
+	VmStateBuffer buffer;
+	memSavingState saveme(buffer);
+
+	saveme.FreezeAll();
+
+	memcpy(data, buffer.GetPtr(), buffer.GetLength());
+	SPU2Savestate::FreezeIt(*(SPU2Savestate::DataBlock*)((u8*)data + buffer.GetLength()));
+
+	CoreThread.Resume();
+	return true;
 }
+
 bool retro_unserialize(const void* data, size_t size)
 {
-	return false;
+	GetMTGS().StepFrame();
+	ScopedCoreThreadPause paused_core;
+	GetMTGS().Flush();
+
+	VmStateBuffer buffer;
+	buffer.MakeRoomFor(size);
+	memcpy(buffer.GetPtr(), data, size);
+
+	memLoadingState loadme(buffer);
+
+	loadme.FreezeAll();
+	SPU2Savestate::ThawIt(*(SPU2Savestate::DataBlock*)loadme.GetBlockPtr());
+
+	CoreThread.Resume();
+	return true;
 }
 
 unsigned retro_get_region(void)

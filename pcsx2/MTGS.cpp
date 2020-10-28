@@ -278,7 +278,7 @@ class RingBufferLock {
 	}
 };
 
-void SysMtgsThread::ExecuteTaskInThread()
+void SysMtgsThread::ExecuteTaskInThread(bool flush_all)
 {
 #ifdef __LIBRETRO__
 	pxAssert(IsSelf());
@@ -558,15 +558,15 @@ void SysMtgsThread::ExecuteTaskInThread()
 				}
 			}
 #ifdef __LIBRETRO__
-			if(tag.command == GS_RINGTYPE_VSYNC)
-			{
+			if(!flush_all && tag.command == GS_RINGTYPE_VSYNC) {
 				busy.Release();
-				if( m_SignalRingEnable.exchange(false) )
-				{
-					//Console.Warning( "(MTGS Thread) Dangling RingSignal on empty buffer!  signalpos=0x%06x", m_SignalRingPosition.exchange(0) ) );
-					m_SignalRingPosition.store(0, std::memory_order_release);
-					m_sem_OnRingReset.Post();
-				}
+				return;
+			}
+			if(flush_all &&
+				!gifUnit.gifPath[GIF_PATH_1].getReadAmount() &&
+				!gifUnit.gifPath[GIF_PATH_2].getReadAmount() &&
+				!gifUnit.gifPath[GIF_PATH_3].getReadAmount()){
+				busy.Release();
 				return;
 			}
 #endif
@@ -592,8 +592,25 @@ void SysMtgsThread::ExecuteTaskInThread()
 	}
 }
 
-void SysMtgsThread::FinishTaskInThread()
+void SysMtgsThread::StepFrame()
 {
+	ExecuteTaskInThread(false);
+}
+
+void SysMtgsThread::Flush()
+{
+	if(!gifUnit.gifPath[GIF_PATH_1].getReadAmount() &&
+		!gifUnit.gifPath[GIF_PATH_2].getReadAmount() &&
+		!gifUnit.gifPath[GIF_PATH_3].getReadAmount())
+		return;
+
+	SetEvent();
+	ExecuteTaskInThread(true);
+}
+
+void SysMtgsThread::ClosePlugin()
+{
+#ifdef __LIBRETRO__
 	if( m_SignalRingEnable.exchange(false) )
 	{
 		//Console.Warning( "(MTGS Thread) Dangling RingSignal on empty buffer!  signalpos=0x%06x", m_SignalRingPosition.exchange(0) ) );
@@ -602,16 +619,11 @@ void SysMtgsThread::FinishTaskInThread()
 	}
 	if (m_VsyncSignalListener.exchange(false))
 		m_sem_Vsync.Post();
-}
-
-void SysMtgsThread::ClosePlugin()
-{
+//	m_thread = {};
+#endif
 	if( !m_PluginOpened ) return;
 	m_PluginOpened = false;
 	GetCorePlugins().Close( PluginId_GS );
-#ifdef __LIBRETRO__
-	m_thread = {};
-#endif
 }
 
 void SysMtgsThread::OnSuspendInThread()
@@ -640,7 +652,15 @@ void SysMtgsThread::OnCleanupInThread()
 // If isMTVU, then this implies this function is being called from the MTVU thread...
 void SysMtgsThread::WaitGS(bool syncRegs, bool weakWait, bool isMTVU)
 {
+#ifdef __LIBRETRO__
+	if(IsSelf())
+	{
+		GetMTGS().Flush();
+		return;
+	}
+#else
 	pxAssertDev( !IsSelf(), "This method is only allowed from threads *not* named MTGS." );
+#endif
 
 	if( m_ExecMode == ExecMode_NoThreadYet || !IsRunning() ) return;
 	if( !pxAssertDev( IsOpen(), "MTGS Warning!  WaitGS issued on a closed thread." ) ) return;
@@ -925,6 +945,14 @@ void SysMtgsThread::WaitForOpen()
 
 void SysMtgsThread::Freeze( int mode, MTGS_FreezeData& data )
 {
+#ifdef __LIBRETRO__
+	if(IsSelf())
+	{
+		Flush();
+		data.retval = GetCorePlugins().DoFreeze( PluginId_GS, mode, data.fdata );
+		return;
+	}
+#endif
 	GetCorePlugins().Open( PluginId_GS );
 	SendPointerPacket( GS_RINGTYPE_FREEZE, mode, &data );
 	Resume();

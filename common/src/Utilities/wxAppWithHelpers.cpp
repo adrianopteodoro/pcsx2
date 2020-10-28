@@ -565,8 +565,7 @@ void wxAppWithHelpers::PostCommand(int evtType, int intParam, long longParam, co
 {
     PostCommand(NULL, evtType, intParam, longParam, stringParam);
 }
-#endif
-#if wxUSE_GUI
+
 sptr wxAppWithHelpers::ProcessCommand(void *clientData, int evtType, int intParam, long longParam, const wxString &stringParam)
 {
     SynchronousActionState sync;

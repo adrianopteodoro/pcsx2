@@ -153,6 +153,10 @@ void AppCoreThread::Suspend(bool isBlocking)
 		bool result = GetSysExecutorThread().Rpc_TryInvokeAsync(_Suspend, L"AppCoreThread::Suspend");
 		pxAssert(result);
 	}
+#ifdef __LIBRETRO__
+	if(!isBlocking && !GetSysExecutorThread().Rpc_TryInvokeAsync(_Suspend, L"AppCoreThread::Suspend"))
+		_parent::Suspend(false);
+#endif
 	else if (!GetSysExecutorThread().Rpc_TryInvoke(_Suspend, L"AppCoreThread::Suspend"))
 		_parent::Suspend(true);
 }
