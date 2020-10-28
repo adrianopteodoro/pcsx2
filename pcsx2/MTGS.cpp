@@ -604,6 +604,8 @@ void SysMtgsThread::Flush()
 		!gifUnit.gifPath[GIF_PATH_3].getReadAmount())
 		return;
 
+	if(!m_RingBufferIsBusy.load(std::memory_order_relaxed))
+		m_sem_event.Post();
 	SetEvent();
 	ExecuteTaskInThread(true);
 }

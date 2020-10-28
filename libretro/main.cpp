@@ -374,6 +374,7 @@ void retro_reset(void)
 static void context_reset()
 {
 	printf("Context reset\n");
+	SetGSConfig().VsyncQueueSize = 2;
 	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
 	//	GSsetVsync(0);
@@ -381,8 +382,10 @@ static void context_reset()
 static void context_destroy()
 {
 	//	GetCoreThread().Pause();
+	SetGSConfig().VsyncQueueSize = 100;
 	GetMTGS().ClosePlugin();
-	GetCoreThread().Suspend();
+	GetCoreThread().Pause();
+//	GetCoreThread().Suspend();
 
 	printf("Context destroy\n");
 }
@@ -510,10 +513,11 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info* i
 }
 
 void retro_unload_game(void)
-{
+{	
+	SetGSConfig().VsyncQueueSize = 100;
+//	GetMTGS().Flush();
 	GetMTGS().ClosePlugin();
 	GetCoreThread().Suspend();
-	//	GetCoreThread().Pause();
 }
 
 
