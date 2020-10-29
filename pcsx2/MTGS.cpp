@@ -278,7 +278,11 @@ class RingBufferLock {
 	}
 };
 
+#ifdef __LIBRETRO__
 void SysMtgsThread::ExecuteTaskInThread(bool flush_all)
+#else
+void SysMtgsThread::ExecuteTaskInThread()
+#endif
 {
 	// Threading info: run in MTGS thread
 	// m_ReadPos is only update by the MTGS thread so it is safe to load it with a relaxed atomic
@@ -589,7 +593,7 @@ void SysMtgsThread::ExecuteTaskInThread(bool flush_all)
 		//Console.Warning( "(MTGS Thread) Nothing to do!  ringpos=0x%06x", m_ReadPos );
 	}
 }
-
+#ifdef __LIBRETRO__
 void SysMtgsThread::StepFrame()
 {
 	pxAssert(IsSelf());
@@ -610,6 +614,13 @@ void SysMtgsThread::Flush()
 	ExecuteTaskInThread(true);
 }
 
+void SysMtgsThread::SignalVsync()
+{
+	if (m_VsyncSignalListener.exchange(false))
+		m_sem_Vsync.Post();
+}
+
+#endif
 void SysMtgsThread::ClosePlugin()
 {
 #ifdef __LIBRETRO__
@@ -626,12 +637,6 @@ void SysMtgsThread::ClosePlugin()
 	if( !m_PluginOpened ) return;
 	m_PluginOpened = false;
 	GetCorePlugins().Close( PluginId_GS );
-}
-
-void SysMtgsThread::SignalVsync()
-{
-	if (m_VsyncSignalListener.exchange(false))
-		m_sem_Vsync.Post();
 }
 
 void SysMtgsThread::OnSuspendInThread()
