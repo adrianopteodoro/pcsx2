@@ -280,10 +280,6 @@ class RingBufferLock {
 
 void SysMtgsThread::ExecuteTaskInThread(bool flush_all)
 {
-#ifdef __LIBRETRO__
-	pxAssert(IsSelf());
-#endif
-
 	// Threading info: run in MTGS thread
 	// m_ReadPos is only update by the MTGS thread so it is safe to load it with a relaxed atomic
 
@@ -554,7 +550,9 @@ void SysMtgsThread::ExecuteTaskInThread(bool flush_all)
 					// Make sure to post the signal after the m_ReadPos has been updated...
 					m_SignalRingEnable.store(false, std::memory_order_release);
 					m_sem_OnRingReset.Post();
+#ifndef __LIBRETRO__
 					continue;
+#endif
 				}
 			}
 #ifdef __LIBRETRO__
@@ -594,11 +592,13 @@ void SysMtgsThread::ExecuteTaskInThread(bool flush_all)
 
 void SysMtgsThread::StepFrame()
 {
+	pxAssert(IsSelf());
 	ExecuteTaskInThread(false);
 }
 
 void SysMtgsThread::Flush()
 {
+	pxAssert(IsSelf());
 	if(!gifUnit.gifPath[GIF_PATH_1].getReadAmount() &&
 		!gifUnit.gifPath[GIF_PATH_2].getReadAmount() &&
 		!gifUnit.gifPath[GIF_PATH_3].getReadAmount())
@@ -626,6 +626,12 @@ void SysMtgsThread::ClosePlugin()
 	if( !m_PluginOpened ) return;
 	m_PluginOpened = false;
 	GetCorePlugins().Close( PluginId_GS );
+}
+
+void SysMtgsThread::SignalVsync()
+{
+	if (m_VsyncSignalListener.exchange(false))
+		m_sem_Vsync.Post();
 }
 
 void SysMtgsThread::OnSuspendInThread()

@@ -23,6 +23,7 @@
 #include "svnrev.h"
 #include "SPU2/Global.h"
 #include "ps2/BiosTools.h"
+#include "CDVD/CDVD.h"
 #include "MTVU.h"
 
 #ifdef PERF_TEST
@@ -163,13 +164,40 @@ static const IConsoleWriter ConsoleWriter_Libretro =
 
 static std::vector<const char*> disk_images;
 static int image_index = 0;
+static bool eject_state;
 static bool RETRO_CALLCONV set_eject_state(bool ejected)
 {
+	if(eject_state == ejected)
+		return false;
+
+	eject_state = ejected;
+
+	SetGSConfig().VsyncQueueSize = 100;
+	GetMTGS().SignalVsync();
+	CoreThread.Pause();
+	SetGSConfig().VsyncQueueSize = 2;
+
+	if(ejected)
+		cdvdCtrlTrayOpen();
+	else
+	{
+		if(image_index < 0 || image_index >= (int)disk_images.size())
+			g_Conf->CdvdSource = CDVD_SourceType::NoDisc;
+		else
+		{
+			g_Conf->CurrentIso = disk_images[image_index];
+			g_Conf->CdvdSource = CDVD_SourceType::Iso;
+			CDVDsys_SetFile(CDVD_SourceType::Iso, g_Conf->CurrentIso);
+		}
+		cdvdCtrlTrayClose();
+	}
+
+	CoreThread.Resume();
 	return true;
 }
 static bool RETRO_CALLCONV get_eject_state(void)
-{
-	return true;
+{	
+	return eject_state;
 }
 
 static unsigned RETRO_CALLCONV get_image_index(void)
@@ -178,8 +206,10 @@ static unsigned RETRO_CALLCONV get_image_index(void)
 }
 static bool RETRO_CALLCONV set_image_index(unsigned index)
 {
-	image_index = index;
-	return true;
+	if(eject_state)
+		image_index = index;
+
+	return eject_state;
 }
 static unsigned RETRO_CALLCONV get_num_images(void)
 {
@@ -191,7 +221,17 @@ static bool RETRO_CALLCONV replace_image_index(unsigned index, const struct retr
 	if (index >= disk_images.size())
 		return false;
 
-	disk_images[index] = info->path;
+	if(!info->path)
+	{
+		disk_images.erase(disk_images.begin() + index);
+		if (!disk_images.size())
+			image_index = -1;
+		else if (image_index > (int)index)
+			image_index--;
+	}
+	else
+		disk_images[index] = info->path;
+
 	return true;
 }
 
@@ -201,13 +241,11 @@ static bool RETRO_CALLCONV add_image_index(void)
 	return true;
 }
 
-/* NOTE: Frontend will only attempt to record/restore
- * last used disk index if both set_initial_image()
- * and get_image_path() are implemented */
 static bool RETRO_CALLCONV set_initial_image(unsigned index, const char* path)
 {
 	if (index >= disk_images.size())
 		index = 0;
+
 	image_index = index;
 
 	return true;
@@ -309,7 +347,7 @@ void retro_init(void)
 		get_image_label,
 	};
 
-	//	environ_cb(RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE, &disk_control);
+	environ_cb(RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE, &disk_control);
 }
 
 void retro_deinit(void)
@@ -369,12 +407,12 @@ void retro_reset(void)
 	GetCoreThread().ResetQuick();
 	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
+	eject_state = false;
 }
 
 static void context_reset()
 {
 	printf("Context reset\n");
-	SetGSConfig().VsyncQueueSize = 2;
 	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
 	//	GSsetVsync(0);
@@ -385,6 +423,7 @@ static void context_destroy()
 	SetGSConfig().VsyncQueueSize = 100;
 	GetMTGS().ClosePlugin();
 	GetCoreThread().Pause();
+	SetGSConfig().VsyncQueueSize = 2;
 //	GetCoreThread().Suspend();
 
 	printf("Context destroy\n");
@@ -456,6 +495,7 @@ bool retro_load_game(const struct retro_game_info* game)
 	// By default no IRX injection
 	g_Conf->CurrentIRX = "";
 	g_Conf->BaseFilenames.Bios = Options::bios.Get();
+	eject_state = false;
 
 	Options::renderer.UpdateAndLock(); // disallow changes to Options::renderer outside of retro_load_game.
 
@@ -518,6 +558,7 @@ void retro_unload_game(void)
 //	GetMTGS().Flush();
 	GetMTGS().ClosePlugin();
 	GetCoreThread().Suspend();
+	SetGSConfig().VsyncQueueSize = 2;
 }
 
 

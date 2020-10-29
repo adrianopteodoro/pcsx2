@@ -385,6 +385,7 @@ public:
 #ifdef __LIBRETRO__
 	void StepFrame();
 	void Flush();
+	void SignalVsync();
 	void ExecuteTaskInThread(bool flush_all = false);
 #else
 	void ExecuteTaskInThread();

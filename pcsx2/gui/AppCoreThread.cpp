@@ -565,7 +565,9 @@ void AppCoreThread::OnResumeInThread(bool isSuspended)
 	if (m_resetCdvd)
 	{
 		CDVDsys_ChangeSource(g_Conf->CdvdSource);
+#ifndef __LIBRETRO__
 		cdvdCtrlTrayOpen();
+#endif
 		m_resetCdvd = false;
 	}
 

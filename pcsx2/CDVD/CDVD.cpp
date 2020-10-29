@@ -993,7 +993,7 @@ void cdvdVsync()
 	if (cdvd.RTCcount < (GetVerticalFrequency().ToIntRounded()))
 		return;
 	cdvd.RTCcount = 0;
-
+#ifndef __LIBRETRO__
 	if (cdvd.Status == CDVD_STATUS_TRAY_OPEN)
 	{
 		cdvd.TrayTimeout++;
@@ -1003,7 +1003,7 @@ void cdvdVsync()
 		cdvdCtrlTrayClose();
 		cdvd.TrayTimeout = 0;
 	}
-
+#endif
 	cdvd.RTC.second++;
 	if (cdvd.RTC.second < 60)
 		return;
