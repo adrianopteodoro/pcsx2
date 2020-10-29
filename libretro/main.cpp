@@ -26,6 +26,7 @@
 #include "CDVD/CDVD.h"
 #include "MTVU.h"
 
+//#define PERF_TEST
 #ifdef PERF_TEST
 static struct retro_perf_callback perf_cb;
 
@@ -46,12 +47,6 @@ static struct retro_perf_callback perf_cb;
 #define RETRO_PERFORMANCE_STOP(name)
 #endif
 
-retro_environment_t environ_cb;
-retro_video_refresh_t video_cb;
-struct retro_hw_render_callback hw_render;
-static ConsoleColors log_color = Color_Default;
-static retro_log_printf_t log_cb;
-
 namespace Options
 {
 static Option<std::string> bios("pcsx2_bios", "Bios"); // will be filled in retro_init()
@@ -68,6 +63,23 @@ static GfxOption<int> frames_to_draw("pcsx2_frames_to_draw", "Frameskip: Frames 
 static GfxOption<int> frames_to_skip("pcsx2_frames_to_skip", "Frameskip: Frames to Skip", 1, 10);
 } // namespace Options
 
+retro_environment_t environ_cb;
+retro_video_refresh_t video_cb;
+struct retro_hw_render_callback hw_render;
+static ConsoleColors log_color = Color_Default;
+static retro_log_printf_t log_cb;
+static retro_audio_sample_batch_t batch_cb;
+static retro_audio_sample_t sample_cb;
+
+int Interpolation = 4;
+bool EffectsDisabled = false;
+bool postprocess_filter_dealias = false;
+unsigned int delayCycles = 4;
+static const int samples_max = 0x800;
+static int write_pos = 0;
+static s16 snd_buffer[samples_max << 1];
+static Threading::Mutex snd_mutex;
+
 // renderswitch - tells GSdx to go into dx9 sw if "renderswitch" is set.
 bool renderswitch = false;
 uint renderswitch_delay = 0;
@@ -77,6 +89,26 @@ static wxFileName bios_dir;
 void retro_set_video_refresh(retro_video_refresh_t cb)
 {
 	video_cb = cb;
+}
+
+void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
+{
+	batch_cb = cb;
+}
+
+void retro_set_audio_sample(retro_audio_sample_t cb)
+{
+	sample_cb = cb;
+}
+
+void SndBuffer::Write(const StereoOut32& Sample)
+{
+	ScopedLock locker(snd_mutex);
+	if(write_pos < (samples_max << 1))
+	{
+		snd_buffer[write_pos++] = Sample.Left >> 12;
+		snd_buffer[write_pos++] = Sample.Right >> 12;
+	}
 }
 
 void retro_set_environment(retro_environment_t cb)
@@ -408,6 +440,7 @@ void retro_reset(void)
 	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
 	eject_state = false;
+	write_pos = 0;
 }
 
 static void context_reset()
@@ -488,6 +521,7 @@ bool retro_load_game(const struct retro_game_info* game)
 	g_Conf->CurrentIRX = "";
 	g_Conf->BaseFilenames.Bios = Options::bios.Get();
 	eject_state = false;
+	write_pos = 0;
 
 	Options::renderer.UpdateAndLock(); // disallow changes to Options::renderer outside of retro_load_game.
 
@@ -594,6 +628,13 @@ void retro_run(void)
 
 	GetMTGS().StepFrame();
 
+	if (write_pos > (0x200 << 1))
+	{
+		ScopedLock locker(snd_mutex);
+		batch_cb(snd_buffer, write_pos >> 1);
+		write_pos = 0;
+	}
+
 	RETRO_PERFORMANCE_STOP(pcsx2_run);
 }
 
@@ -607,8 +648,10 @@ size_t retro_serialize_size(void)
 
 bool retro_serialize(void* data, size_t size)
 {
-	GetMTGS().StepFrame();
-	ScopedCoreThreadPause paused_core;
+	SetGSConfig().VsyncQueueSize = 100;
+	GetMTGS().SignalVsync();
+	CoreThread.Pause();
+	SetGSConfig().VsyncQueueSize = 2;
 	GetMTGS().Flush();
 
 	VmStateBuffer buffer;
@@ -625,8 +668,10 @@ bool retro_serialize(void* data, size_t size)
 
 bool retro_unserialize(const void* data, size_t size)
 {
-	GetMTGS().StepFrame();
-	ScopedCoreThreadPause paused_core;
+	SetGSConfig().VsyncQueueSize = 100;
+	GetMTGS().SignalVsync();
+	CoreThread.Pause();
+	SetGSConfig().VsyncQueueSize = 2;
 	GetMTGS().Flush();
 
 	VmStateBuffer buffer;
@@ -668,41 +713,6 @@ void retro_cheat_reset(void)
 
 void retro_cheat_set(unsigned index, bool enabled, const char* code)
 {
-}
-
-int Interpolation = 4;
-bool EffectsDisabled = false;
-bool postprocess_filter_dealias = false;
-unsigned int delayCycles = 4;
-
-static retro_audio_sample_batch_t batch_cb;
-static retro_audio_sample_t sample_cb;
-static int write_pos = 0;
-
-void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
-{
-	batch_cb = cb;
-}
-
-void retro_set_audio_sample(retro_audio_sample_t cb)
-{
-	sample_cb = cb;
-}
-
-void SndBuffer::Write(const StereoOut32& Sample)
-{
-#if 0
-	static s16 snd_buffer[0x100 << 1];
-	snd_buffer[write_pos++] = Sample.Left >> 12;
-	snd_buffer[write_pos++] = Sample.Right >> 12;
-	if(write_pos == (0x100 << 1))
-	{
-		batch_cb(snd_buffer, write_pos >> 1);
-		write_pos = 0;
-	}
-#else
-	sample_cb(Sample.Left >> 12, Sample.Right >> 12);
-#endif
 }
 
 void SndBuffer::Init()
