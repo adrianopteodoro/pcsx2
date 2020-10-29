@@ -436,37 +436,29 @@ static bool set_hw_render(retro_hw_context_type type)
 	hw_render.context_destroy = context_destroy;
 	hw_render.bottom_left_origin = true;
 	hw_render.depth = true;
-	hw_render.cache_context = false;
+	hw_render.cache_context = true;
 
 	switch (type)
 	{
 		case RETRO_HW_CONTEXT_DIRECT3D:
 			hw_render.version_major = 11;
 			hw_render.version_minor = 0;
-			hw_render.cache_context = true;
 			break;
 
 		case RETRO_HW_CONTEXT_OPENGL_CORE:
 			hw_render.version_major = 3;
 			hw_render.version_minor = 3;
+			hw_render.cache_context = false;
 			break;
 
 		case RETRO_HW_CONTEXT_OPENGL:
-			if (set_hw_render(RETRO_HW_CONTEXT_OPENGL_CORE))
-				return true;
-
 			hw_render.version_major = 3;
 			hw_render.version_minor = 0;
-			hw_render.cache_context = true;
 			break;
 
 		case RETRO_HW_CONTEXT_OPENGLES3:
-			if (set_hw_render(RETRO_HW_CONTEXT_OPENGL))
-				return true;
-
 			hw_render.version_major = 3;
 			hw_render.version_minor = 0;
-			hw_render.cache_context = true;
 			break;
 
 		case RETRO_HW_CONTEXT_NONE:
@@ -533,17 +525,27 @@ bool retro_load_game(const struct retro_game_info* game)
 
 	Input::Init();
 
-	retro_hw_context_type context_type = RETRO_HW_CONTEXT_OPENGL;
 	if (Options::renderer == "Auto")
+	{
+		retro_hw_context_type context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
 		environ_cb(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &context_type);
-#ifdef _WIN32
-	else if (Options::renderer == "D3D11")
-		context_type = RETRO_HW_CONTEXT_DIRECT3D;
+		return set_hw_render(context_type);
+	}
+#ifdef _WIN32	
+	if (Options::renderer == "D3D11")
+		return set_hw_render(RETRO_HW_CONTEXT_DIRECT3D);
 #endif
-	else if (Options::renderer == "Null")
-		context_type = RETRO_HW_CONTEXT_NONE;
+	if (Options::renderer == "Null")
+		return set_hw_render(RETRO_HW_CONTEXT_NONE);
 
-	return set_hw_render(context_type);
+	if (set_hw_render(RETRO_HW_CONTEXT_OPENGL_CORE))
+		return true;
+	if (set_hw_render(RETRO_HW_CONTEXT_OPENGL))
+		return true;
+	if (set_hw_render(RETRO_HW_CONTEXT_OPENGLES3))
+		return true;
+
+	return false;
 }
 
 bool retro_load_game_special(unsigned game_type, const struct retro_game_info* info,
