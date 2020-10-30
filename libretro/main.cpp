@@ -323,9 +323,11 @@ void retro_init(void)
 #endif
 	}
 
-	//	pcsx2 = new Pcsx2App;
-	//	wxApp::SetInstance(pcsx2);
-	pcsx2 = &wxGetApp();
+	if (!pcsx2)
+	{
+		//	pcsx2 = new Pcsx2App;
+		//	wxApp::SetInstance(pcsx2);
+		pcsx2 = &wxGetApp();
 #if 0
 	int argc = 0;
 	pcsx2->Initialize(argc, (wchar_t**)nullptr);
@@ -333,17 +335,21 @@ void retro_init(void)
 	wxModule::InitializeModules();
 #endif
 
-	InitCPUTicks();
-	//	pxDoAssert = AppDoAssert;
-	pxDoAssert = NULL;
-	pxDoOutOfMemory = SysOutOfMemory_EmergencyResponse;
-	g_Conf = std::make_unique<AppConfig>();
-	i18n_SetLanguage(wxLANGUAGE_DEFAULT);
-	i18n_SetLanguagePath();
-	GetSysExecutorThread().Start();
-	pcsx2->DetectCpuAndUserMode();
-	pcsx2->AllocateCoreStuffs();
-	//	pcsx2->GetGameDatabase();
+		InitCPUTicks();
+		//	pxDoAssert = AppDoAssert;
+		pxDoAssert = NULL;
+		pxDoOutOfMemory = SysOutOfMemory_EmergencyResponse;
+		g_Conf = std::make_unique<AppConfig>();
+		i18n_SetLanguage(wxLANGUAGE_DEFAULT);
+		i18n_SetLanguagePath();
+		GetSysExecutorThread().Start();
+		pcsx2->DetectCpuAndUserMode();
+		pcsx2->AllocateCoreStuffs();
+		//	pcsx2->GetGameDatabase();
+	}
+	else
+		GetSysExecutorThread().Start();
+
 	vu1Thread.Reset();
 
 	g_Conf->BaseFilenames.Plugins[PluginId_GS] = "Built-in";
@@ -392,7 +398,9 @@ void retro_deinit(void)
 
 	// WIN32 doesn't allow canceling threads from global constructors/destructors in a shared library.
 	vu1Thread.Cancel();
-	pcsx2->CleanupOnExit();
+	GetSysExecutorThread().Cancel();
+//	GetVmMemory().ReleaseAll();
+//	pcsx2->CleanupOnExit();
 #ifdef PERF_TEST
 	perf_cb.perf_log();
 #endif
@@ -592,6 +600,8 @@ void retro_unload_game(void)
 	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
 	GetMTGS().ClosePlugin();
 	GetCoreThread().Suspend();
+	GetCoreThread().Cancel(true);
+	new (&GetMTGS()) SysMtgsThread();
 }
 
 
