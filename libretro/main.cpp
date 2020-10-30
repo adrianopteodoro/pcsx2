@@ -464,6 +464,7 @@ static void context_reset()
 static void context_destroy()
 {
 	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
+	GetMTGS().Flush();
 	GetMTGS().ClosePlugin();
 	CoreThread.Pause();
 	printf("Context destroy\n");
