@@ -602,14 +602,15 @@ void SysMtgsThread::StepFrame()
 
 void SysMtgsThread::Flush()
 {
+	if (m_VsyncSignalListener.exchange(false))
+		m_sem_Vsync.Post();
+
 	pxAssert(IsSelf());
 	if(!gifUnit.gifPath[GIF_PATH_1].getReadAmount() &&
 		!gifUnit.gifPath[GIF_PATH_2].getReadAmount() &&
 		!gifUnit.gifPath[GIF_PATH_3].getReadAmount())
 		return;
 
-	if(!m_RingBufferIsBusy.load(std::memory_order_relaxed))
-		m_sem_event.Post();
 	SetEvent();
 	ExecuteTaskInThread(true);
 }

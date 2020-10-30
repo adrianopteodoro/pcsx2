@@ -101,10 +101,15 @@ void retro_set_audio_sample(retro_audio_sample_t cb)
 	sample_cb = cb;
 }
 
+static void _Core_Pause()
+{
+	CoreThread.Pause();
+}
+
 void SndBuffer::Write(const StereoOut32& Sample)
 {
 	ScopedLock locker(snd_mutex);
-	if(write_pos < (samples_max << 1))
+	if (write_pos < (samples_max << 1))
 	{
 		snd_buffer[write_pos++] = Sample.Left >> 12;
 		snd_buffer[write_pos++] = Sample.Right >> 12;
@@ -199,21 +204,20 @@ static int image_index = 0;
 static bool eject_state;
 static bool RETRO_CALLCONV set_eject_state(bool ejected)
 {
-	if(eject_state == ejected)
+	if (eject_state == ejected)
 		return false;
 
 	eject_state = ejected;
 
-	SetGSConfig().VsyncQueueSize = 100;
+	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
 	GetMTGS().SignalVsync();
 	CoreThread.Pause();
-	SetGSConfig().VsyncQueueSize = 2;
 
-	if(ejected)
+	if (ejected)
 		cdvdCtrlTrayOpen();
 	else
 	{
-		if(image_index < 0 || image_index >= (int)disk_images.size())
+		if (image_index < 0 || image_index >= (int)disk_images.size())
 			g_Conf->CdvdSource = CDVD_SourceType::NoDisc;
 		else
 		{
@@ -228,7 +232,7 @@ static bool RETRO_CALLCONV set_eject_state(bool ejected)
 	return true;
 }
 static bool RETRO_CALLCONV get_eject_state(void)
-{	
+{
 	return eject_state;
 }
 
@@ -238,7 +242,7 @@ static unsigned RETRO_CALLCONV get_image_index(void)
 }
 static bool RETRO_CALLCONV set_image_index(unsigned index)
 {
-	if(eject_state)
+	if (eject_state)
 		image_index = index;
 
 	return eject_state;
@@ -253,7 +257,7 @@ static bool RETRO_CALLCONV replace_image_index(unsigned index, const struct retr
 	if (index >= disk_images.size())
 		return false;
 
-	if(!info->path)
+	if (!info->path)
 	{
 		disk_images.erase(disk_images.begin() + index);
 		if (!disk_images.size())
@@ -448,17 +452,12 @@ static void context_reset()
 	printf("Context reset\n");
 	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
-	//	GSsetVsync(0);
 }
 static void context_destroy()
 {
-	//	GetCoreThread().Pause();
-	SetGSConfig().VsyncQueueSize = 100;
+	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
 	GetMTGS().ClosePlugin();
-	GetCoreThread().Pause();
-	SetGSConfig().VsyncQueueSize = 2;
-//	GetCoreThread().Suspend();
-
+	CoreThread.Pause();
 	printf("Context destroy\n");
 }
 
@@ -565,7 +564,7 @@ bool retro_load_game(const struct retro_game_info* game)
 		environ_cb(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &context_type);
 		return set_hw_render(context_type);
 	}
-#ifdef _WIN32	
+#ifdef _WIN32
 	if (Options::renderer == "D3D11")
 		return set_hw_render(RETRO_HW_CONTEXT_DIRECT3D);
 #endif
@@ -589,12 +588,10 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info* i
 }
 
 void retro_unload_game(void)
-{	
-	SetGSConfig().VsyncQueueSize = 100;
-//	GetMTGS().Flush();
+{
+	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
 	GetMTGS().ClosePlugin();
 	GetCoreThread().Suspend();
-	SetGSConfig().VsyncQueueSize = 2;
 }
 
 
@@ -641,18 +638,16 @@ void retro_run(void)
 size_t retro_serialize_size(void)
 {
 	return Ps2MemSize::MainRam + Ps2MemSize::Scratch + Ps2MemSize::Hardware +
-			Ps2MemSize::IopRam + Ps2MemSize::IopHardware +
-			VU0_PROGSIZE + VU0_MEMSIZE + VU1_PROGSIZE + VU1_MEMSIZE +
-			_8mb;// + SPU2Savestate::SizeIt();
+		   Ps2MemSize::IopRam + Ps2MemSize::IopHardware +
+		   VU0_PROGSIZE + VU0_MEMSIZE + VU1_PROGSIZE + VU1_MEMSIZE +
+		   _8mb; // + SPU2Savestate::SizeIt();
 }
 
 bool retro_serialize(void* data, size_t size)
 {
-	SetGSConfig().VsyncQueueSize = 100;
-	GetMTGS().SignalVsync();
-	CoreThread.Pause();
-	SetGSConfig().VsyncQueueSize = 2;
+	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
 	GetMTGS().Flush();
+	CoreThread.Pause();
 
 	VmStateBuffer buffer;
 	memSavingState saveme(buffer);
@@ -668,11 +663,9 @@ bool retro_serialize(void* data, size_t size)
 
 bool retro_unserialize(const void* data, size_t size)
 {
-	SetGSConfig().VsyncQueueSize = 100;
-	GetMTGS().SignalVsync();
-	CoreThread.Pause();
-	SetGSConfig().VsyncQueueSize = 2;
+	GetSysExecutorThread().Rpc_TryInvokeAsync(_Core_Pause, L"AppCoreThread::Pause");
 	GetMTGS().Flush();
+	CoreThread.Pause();
 
 	VmStateBuffer buffer;
 	buffer.MakeRoomFor(size);
