@@ -26,6 +26,8 @@
 #include "CDVD/CDVD.h"
 #include "MTVU.h"
 
+#define THREADED_AUDIO
+
 //#define PERF_TEST
 #ifdef PERF_TEST
 static struct retro_perf_callback perf_cb;
@@ -75,10 +77,12 @@ int Interpolation = 4;
 bool EffectsDisabled = false;
 bool postprocess_filter_dealias = false;
 unsigned int delayCycles = 4;
+#ifndef THREADED_AUDIO
 static const int samples_max = 0x800;
 static int write_pos = 0;
 static s16 snd_buffer[samples_max << 1];
 static Threading::Mutex snd_mutex;
+#endif
 
 // renderswitch - tells GSdx to go into dx9 sw if "renderswitch" is set.
 bool renderswitch = false;
@@ -108,12 +112,16 @@ static void _Core_Pause()
 
 void SndBuffer::Write(const StereoOut32& Sample)
 {
+#ifdef THREADED_AUDIO
+	sample_cb(Sample.Left >> 12, Sample.Right >> 12);
+#else
 	ScopedLock locker(snd_mutex);
 	if (write_pos < (samples_max << 1))
 	{
 		snd_buffer[write_pos++] = Sample.Left >> 12;
 		snd_buffer[write_pos++] = Sample.Right >> 12;
 	}
+#endif
 }
 
 void retro_set_environment(retro_environment_t cb)
@@ -452,7 +460,9 @@ void retro_reset(void)
 	GetMTGS().OpenPlugin();
 	GetCoreThread().Resume();
 	eject_state = false;
+#ifndef THREADED_AUDIO
 	write_pos = 0;
+#endif
 }
 
 static void context_reset()
@@ -529,7 +539,9 @@ bool retro_load_game(const struct retro_game_info* game)
 	g_Conf->CurrentIRX = "";
 	g_Conf->BaseFilenames.Bios = Options::bios.Get();
 	eject_state = false;
+#ifndef THREADED_AUDIO
 	write_pos = 0;
+#endif
 
 	Options::renderer.UpdateAndLock(); // disallow changes to Options::renderer outside of retro_load_game.
 
@@ -635,13 +647,14 @@ void retro_run(void)
 	RETRO_PERFORMANCE_START(pcsx2_run);
 
 	GetMTGS().StepFrame();
-
+#ifndef THREADED_AUDIO
 	if (write_pos > (0x200 << 1))
 	{
 		ScopedLock locker(snd_mutex);
 		batch_cb(snd_buffer, write_pos >> 1);
 		write_pos = 0;
 	}
+#endif
 
 	RETRO_PERFORMANCE_STOP(pcsx2_run);
 }
@@ -721,7 +734,9 @@ void retro_cheat_set(unsigned index, bool enabled, const char* code)
 
 void SndBuffer::Init()
 {
+#ifndef THREADED_AUDIO
 	write_pos = 0;
+#endif
 }
 
 void SndBuffer::Cleanup()
