@@ -45,9 +45,9 @@ typedef struct _keyEvent keyEvent;
 
 //#define GS_LOG GSLog::Log
 
-extern const unsigned char GSversion;
-extern const unsigned char GSrevision;
-extern const unsigned char GSbuild;
+extern const unsigned char version;
+extern const unsigned char revision;
+extern const unsigned char build;
 
 typedef struct
 {
@@ -71,7 +71,7 @@ typedef struct
 
 extern GSVars gs;
 
-extern Config GSconf;
+extern Config conf;
 extern u32 GSKeyEvent;
 extern bool GSShift, GSAlt;
 
@@ -87,7 +87,7 @@ extern void Print(const char *fmt, ...);
 extern void WriteLn(const char *fmt, ...);
 };
 
-extern void GSSaveConfig();
-extern void GSLoadConfig();
+extern void SaveConfig();
+extern void LoadConfig();
 
 #endif

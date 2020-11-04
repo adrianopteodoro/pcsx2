@@ -25,7 +25,7 @@ BOOL CALLBACK ConfigureDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg) {
         case WM_INITDIALOG:
-            PADLoadConfig();
+            LoadConfig();
             if (conf.Log)
                 CheckDlgButton(hW, IDC_LOGGING, TRUE);
             return TRUE;
@@ -40,7 +40,7 @@ BOOL CALLBACK ConfigureDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         conf.Log = 1;
                     else
                         conf.Log = 0;
-                    PADSaveConfig();
+                    SaveConfig();
                     EndDialog(hW, FALSE);
                     return TRUE;
             }
@@ -81,7 +81,7 @@ PADabout()
               GetActiveWindow(),
               (DLGPROC)AboutDlgProc);
 }
-#ifndef BUILTIN_PAD_PLUGIN
+
 BOOL APIENTRY DllMain(HANDLE hModule,  // DLL INIT
                       DWORD dwReason,
                       LPVOID lpReserved)
@@ -89,4 +89,3 @@ BOOL APIENTRY DllMain(HANDLE hModule,  // DLL INIT
     hInst = (HINSTANCE)hModule;
     return TRUE;  // very quick :)
 }
-#endif

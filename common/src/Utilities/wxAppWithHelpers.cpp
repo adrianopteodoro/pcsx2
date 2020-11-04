@@ -515,6 +515,7 @@ void wxAppWithHelpers::IdleEventDispatcher(const wxChar *action)
             // be deleted because those mutex/sema objects will become invalid and cause the pending
             // thread to crash.  So we disallow deletions when those waits are in action, and continue
             // to postpone the deletion of the thread until such time that it is safe.
+
             pxThreadLog.Write(((pxThread *)((wxCommandEvent *)deleteMe.get())->GetClientData())->GetName(), L"Deletion postponed due to mutex or semaphore dependency.");
             postponed.push_back(deleteMe.release());
         } else
@@ -561,6 +562,7 @@ void wxAppWithHelpers::PostCommand(void *clientData, int evtType, int intParam, 
     evt.SetString(stringParam);
     AddPendingEvent(evt);
 }
+
 void wxAppWithHelpers::PostCommand(int evtType, int intParam, long longParam, const wxString &stringParam)
 {
     PostCommand(NULL, evtType, intParam, longParam, stringParam);
@@ -580,6 +582,7 @@ sptr wxAppWithHelpers::ProcessCommand(void *clientData, int evtType, int intPara
 
     return sync.return_value;
 }
+
 sptr wxAppWithHelpers::ProcessCommand(int evtType, int intParam, long longParam, const wxString &stringParam)
 {
     return ProcessCommand(NULL, evtType, intParam, longParam, stringParam);

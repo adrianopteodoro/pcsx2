@@ -391,15 +391,9 @@ namespace Implementations
 	{
 		if (renderswitch_delay == 0)
 		{
-#ifdef __LIBRETRO__
-			CoreThread.Pause();
-			renderswitch = !renderswitch;
-			CoreThread.Resume();
-#else
 			ScopedCoreThreadPause paused_core(new SysExecEvent_SaveSinglePlugin(PluginId_GS));
 			renderswitch = !renderswitch;
 			paused_core.AllowResume();
-#endif
 			renderswitch_delay = -1;
 		}
 	}

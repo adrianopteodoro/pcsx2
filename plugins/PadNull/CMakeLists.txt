@@ -7,13 +7,12 @@ endif()
 
 # plugin name
 set(Output PADnull)
-if(NOT MSVC)
 set(PadNullFinalFlags
 -fvisibility=hidden
 -Wall
 -Wno-parentheses
 	)
-endif()
+
 # PadNull sources
 set(PadNullSources
 	Pad.cpp)
@@ -58,10 +57,5 @@ set(PadNullFinalLibs
 	${X11_LIBRARIES}
 )
 
-if(BUILTIN_PAD)
-    add_pcsx2_lib(${Output} "${PadNullFinalSources}" "${PadNullFinalLibs}" "${PadNullFinalFlags}")
-else()
-    add_pcsx2_plugin(${Output} "${PadNullFinalSources}" "${PadNullFinalLibs}" "${PadNullFinalFlags}")
-endif()
-
+add_pcsx2_plugin(${Output} "${PadNullFinalSources}" "${PadNullFinalLibs}" "${PadNullFinalFlags}")
 target_compile_features(${Output} PRIVATE cxx_std_17)

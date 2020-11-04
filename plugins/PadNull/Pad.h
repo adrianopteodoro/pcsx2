@@ -34,9 +34,7 @@
 #define EXPORT_C_(type) extern "C" __attribute__((stdcall, externally_visible, visibility("default"))) type
 #endif
 
-#ifndef BUILTIN_PAD_PLUGIN
 #define PAD_LOG __Log
-#endif
 
 typedef struct
 {
@@ -48,7 +46,7 @@ extern FILE *padLog;
 extern keyEvent event;
 
 extern void __Log(char *fmt, ...);
-extern void PADSaveConfig();
-extern void PADLoadConfig();
+extern void SaveConfig();
+extern void LoadConfig();
 
 #endif

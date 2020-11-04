@@ -130,7 +130,7 @@ void DefaultKeyboardValues()
     set_keyboard_key(0, XK_s, PAD_LEFT);
 }
 
-void PADSaveConfig()
+void SaveConfig()
 {
     FILE *f;
 
@@ -164,7 +164,7 @@ void PADSaveConfig()
     fclose(f);
 }
 
-void PADLoadConfig()
+void LoadConfig()
 {
     FILE *f;
     char str[256];
@@ -179,7 +179,7 @@ void PADLoadConfig()
     if (f == NULL)
     {
         printf("OnePAD: failed to load ini %s\n", iniFile.c_str());
-        PADSaveConfig(); //save and return
+        SaveConfig(); //save and return
         return;
     }
 

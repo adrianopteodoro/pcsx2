@@ -382,13 +382,12 @@ public:
 	void PostVsyncStart();
 
 	bool IsPluginOpened() const { return m_PluginOpened; }
+
 #ifdef __LIBRETRO__
 	void StepFrame();
 	void Flush();
 	void SignalVsync();
 	void ExecuteTaskInThread(bool flush_all = false);
-#else
-	void ExecuteTaskInThread();
 #endif
 	void OpenPlugin();
 	void ClosePlugin();
@@ -406,6 +405,9 @@ protected:
 
 	// Used internally by SendSimplePacket type functions
 	void _FinishSimplePacket();
+#ifndef __LIBRETRO__
+	void ExecuteTaskInThread();
+#endif
 };
 
 // GetMTGS() is a required external implementation. This function is *NOT* provided

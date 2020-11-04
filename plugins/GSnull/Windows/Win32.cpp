@@ -40,8 +40,8 @@ BOOL CALLBACK ConfigureDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg) {
         case WM_INITDIALOG:
-            GSLoadConfig();
-            if (GSconf.Log)
+            LoadConfig();
+            if (conf.Log)
                 CheckDlgButton(hW, IDC_LOGGING, TRUE);
             return TRUE;
 
@@ -52,10 +52,10 @@ BOOL CALLBACK ConfigureDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     return TRUE;
                 case IDOK:
                     if (IsDlgButtonChecked(hW, IDC_LOGGING))
-                        GSconf.Log = 1;
+                        conf.Log = 1;
                     else
-                        GSconf.Log = 0;
-                    GSSaveConfig();
+                        conf.Log = 0;
+                    SaveConfig();
                     EndDialog(hW, FALSE);
                     return TRUE;
             }
@@ -96,7 +96,7 @@ GSabout()
               GetActiveWindow(),
               (DLGPROC)AboutDlgProc);
 }
-#ifndef BUILTIN_GS_PLUGIN
+
 BOOL APIENTRY DllMain(HANDLE hModule, // DLL INIT
                       DWORD dwReason,
                       LPVOID lpReserved)
@@ -104,4 +104,3 @@ BOOL APIENTRY DllMain(HANDLE hModule, // DLL INIT
     hInst = (HINSTANCE)hModule;
     return TRUE; // very quick :)
 }
-#endif

@@ -877,6 +877,7 @@ void SysCorePlugins::Load( const wxString (&folders)[PluginId_Count] )
 	});
 
 	indent.LeaveScope();
+
 	// Hack for PAD's stupid parameter passed on Init
 #ifndef BUILTIN_PAD_PLUGIN
 	PADinit = (_PADinit)m_info[PluginId_PAD]->CommonBindings.Init;

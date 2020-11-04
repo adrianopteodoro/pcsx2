@@ -148,6 +148,7 @@ bool AppDoAssert( const DiagnosticOrigin& origin, const wxChar *msg )
 
 	if( retval == wxID_YES ) return true;
 	if( retval == wxID_IGNORE ) disableAsserts = true;
+
 	return false;
 #endif
 }

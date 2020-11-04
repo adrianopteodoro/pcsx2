@@ -33,18 +33,18 @@ PADabout()
 EXPORT_C_(void)
 PADconfigure()
 {
-    PADLoadConfig();
+    LoadConfig();
     ConfigureLogging();
-    PADSaveConfig();
+    SaveConfig();
 }
 
-void PADLoadConfig()
+void LoadConfig()
 {
     const std::string iniFile(s_strIniPath + "/Padnull.ini");
 
     if (!Ini.Open(iniFile, READ_FILE)) {
         g_plugin_log.WriteLn("failed to open %s", iniFile.c_str());
-        PADSaveConfig();  //save and return
+        SaveConfig();  //save and return
         return;
     }
 
@@ -52,7 +52,7 @@ void PADLoadConfig()
     Ini.Close();
 }
 
-void PADSaveConfig()
+void SaveConfig()
 {
     const std::string iniFile(s_strIniPath + "/Padnull.ini");
 

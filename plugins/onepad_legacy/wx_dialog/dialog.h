@@ -63,7 +63,7 @@ enum gui_buttons {
 #define DEFAULT_WIDTH 1000
 #define DEFAULT_HEIGHT 740
 
-class PadDialog : public wxDialog
+class Dialog : public wxDialog
 {
     // Panels
     opPanel *m_pan_tabs[GAMEPAD_NUMBER]; // Gamepad Tabs box
@@ -90,7 +90,7 @@ class PadDialog : public wxDialog
     void JoystickEvent(wxTimerEvent &);
 
 public:
-    PadDialog();
+    Dialog();
     void InitDialog();
     void show();
 };

@@ -25,7 +25,6 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <err.h>
-#include <unistd.h>
 #endif
 
 
@@ -151,7 +150,7 @@ void __Log(char *fmt, ...) {
 	va_end(list);
 }
 
-void DEV9LogInit()
+void LogInit()
 {
 	const std::string LogFile(s_strLogPath + "/dev9Log.txt");
 	DEV9Log.WriteToFile = true;
@@ -735,7 +734,7 @@ DEV9setLogDir(const char* dir)
 	// Reload the log file after updated the path
 	// Currently dosn't change winPcap log directories post DEV9open()
 	DEV9Log.Close();
-	DEV9LogInit();
+	LogInit();
 }
 
 int emu_printf(const char *fmt, ...)

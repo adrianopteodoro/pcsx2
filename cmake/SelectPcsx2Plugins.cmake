@@ -168,15 +168,13 @@ endif()
 
 # old version of the plugin that still supports SDL1
 # Was never ported to macOS
-if(wxWidgets_FOUND AND GTKn_FOUND AND SDLn_FOUND AND X11_FOUND AND NOT APPLE)
+if(wxWidgets_FOUND AND GTKn_FOUND AND SDLn_FOUND AND X11_FOUND AND NOT APPLE AND NOT LIBRETRO)
 	set(onepad_legacy TRUE)
-elseif(NOT EXISTS "${CMAKE_SOURCE_DIR}/plugins/onepad_legacy" OR APPLE)
+elseif(NOT EXISTS "${CMAKE_SOURCE_DIR}/plugins/onepad_legacy" OR APPLE OR LIBRETRO)
 	set(onepad_legacy FALSE)
 else()
 	set(onepad_legacy FALSE)
-	if(NOT LIBRETRO)
-		print_dep("Skip build of onepad_legacy: missing dependencies" "${msg_dep_onepad}")
-	endif()
+    print_dep("Skip build of onepad_legacy: missing dependencies" "${msg_dep_onepad}")
 endif()
 #---------------------------------------
 

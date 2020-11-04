@@ -734,11 +734,7 @@ void MainEmuFrame::Menu_ConfigPlugin_Click(wxCommandEvent& event)
 		return;
 
 	wxWindowDisabler disabler;
-#ifdef __LIBRETRO__
-	CoreThread.Pause();
-#else
 	ScopedCoreThreadPause paused_core(new SysExecEvent_SaveSinglePlugin(pid));
-#endif
 
 #ifndef DISABLE_RECORDING
 	if (pid == PluginId_PAD)
@@ -765,10 +761,6 @@ void MainEmuFrame::Menu_ConfigPlugin_Click(wxCommandEvent& event)
 #else
 	GetCorePlugins().Configure(pid);
 #endif
-#ifdef __LIBRETRO__
-	CoreThread.Resume();
-#endif
-
 }
 
 void MainEmuFrame::Menu_Debug_Open_Click(wxCommandEvent& event)

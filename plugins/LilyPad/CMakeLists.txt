@@ -8,13 +8,13 @@ endif()
 
 # plugin name
 set(Output LilyPad-0.11.0)
-if(NOT MSVC)
+
 set(lilypadFinalFlags
     -fvisibility=hidden
     -Wall
     -Wno-parentheses
     )
-endif()
+    
 # lilypad sources
 set(lilypadSources
     DeviceEnumerator.cpp
@@ -100,10 +100,5 @@ set(lilypadFinalSources
     ${lilypadLinuxHeaders}
     )
 
-if(BUILTIN_PAD)
-    add_pcsx2_lib(${Output} "${lilypadFinalSources}" "${lilypadFinalLibs}" "${lilypadFinalFlags}")
-else()
-    add_pcsx2_plugin(${Output} "${lilypadFinalSources}" "${lilypadFinalLibs}" "${lilypadFinalFlags}")
-endif()
-
+add_pcsx2_plugin(${Output} "${lilypadFinalSources}" "${lilypadFinalLibs}" "${lilypadFinalFlags}")
 target_compile_features(${Output} PRIVATE cxx_std_17)

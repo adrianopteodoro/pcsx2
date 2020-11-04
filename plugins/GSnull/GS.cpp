@@ -31,18 +31,15 @@ using namespace std;
 #include "svnrev.h"
 #endif
 
-const unsigned char GSversion = PS2E_GS_VERSION;
-const unsigned char GSrevision = 0;
-const unsigned char GSbuild = 1; // increase that with each version
+const unsigned char version = PS2E_GS_VERSION;
+const unsigned char revision = 0;
+const unsigned char build = 1; // increase that with each version
 
-Config GSconf;
+Config conf;
 u32 GSKeyEvent = 0;
 bool GSShift = false, GSAlt = false;
-#ifdef BUILTIN_GS_PLUGIN
-extern std::string s_strIniPath;
-#else
+
 string s_strIniPath = "inis";
-#endif
 extern std::string s_strLogPath;
 const char *s_iniFilename = "GSnull.ini";
 GSVars gs;
@@ -82,7 +79,7 @@ PS2EgetLibName()
 EXPORT_C_(u32)
 PS2EgetLibVersion2(u32 type)
 {
-    return (GSversion << 16) | (GSrevision << 8) | GSbuild;
+    return (version << 16) | (revision << 8) | build;
 }
 
 // basic funcs
@@ -106,7 +103,7 @@ GSsetLogDir(const char *dir)
 EXPORT_C_(s32)
 GSinit()
 {
-    GSLoadConfig();
+    LoadConfig();
 
     GSLog::Open();
 
@@ -265,15 +262,15 @@ GSsetFrameSkip(int frameskip)
 // if start is 1, starts recording spu2 data, else stops
 // returns a non zero value if successful
 // for now, pData is not used
-EXPORT_C_(void*)
-GSsetupRecording(int start)
+EXPORT_C_(int)
+GSsetupRecording(int start, void *pData)
 {
     if (start)
         GSLog::WriteLn("Pretending to record.");
     else
         GSLog::WriteLn("Pretending to stop recording.");
 
-    return nullptr;
+    return 1;
 }
 
 EXPORT_C_(void)
@@ -291,39 +288,3 @@ EXPORT_C_(void)
 GSgetDriverInfo(GSdriverInfo *info)
 {
 }
-
-EXPORT_C_(void)
-GSsetVsync(int vsync)
-{
-}
-
-EXPORT_C_(void)
-GSosdLog(const char *utf8, u32 color)
-{
-}
-
-EXPORT_C_(void)
-GSosdMonitor(const char *key, const char *value, u32 color)
-{
-}
-
-EXPORT_C_(void)
-GSinitReadFIFO(u64* mem)
-{
-}
-
-EXPORT_C_(void)
-GSinitReadFIFO2(u64 *mem, int qwc)
-{
-}
-
-EXPORT_C_(void)
-GSsetExclusive(int enabled)
-{
-}
-
-EXPORT_C_(void)
-GSgetTitleInfo2(char* dest, size_t length)
-{
-}
-

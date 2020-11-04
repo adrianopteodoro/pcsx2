@@ -8,13 +8,13 @@ endif()
 
 # plugin name
 set(Output GSnull)
-if(NOT MSVC)
+
 set(GSnullFinalFlags
     -fvisibility=hidden
     -Wall
     -Wno-parentheses
 	)
-endif()
+
 # GSnull sources
 set(GSnullSources
 	GifTransfer.cpp
@@ -74,10 +74,5 @@ set(GSnullFinalLibs
 	${X11_LIBRARIES}
 )
 
-if(BUILTIN_GS)
-    add_pcsx2_lib(${Output} "${GSnullFinalSources}" "${GSnullFinalLibs}" "${GSnullFinalFlags}")
-else()
-    add_pcsx2_plugin(${Output} "${GSnullFinalSources}" "${GSnullFinalLibs}" "${GSnullFinalFlags}")
-endif()
-
+add_pcsx2_plugin(${Output} "${GSnullFinalSources}" "${GSnullFinalLibs}" "${GSnullFinalFlags}")
 target_compile_features(${Output} PRIVATE cxx_std_17)

@@ -20,7 +20,7 @@
 #include "dialog.h"
 
 // Construtor of Dialog
-PadDialog::PadDialog()
+Dialog::Dialog()
     : wxDialog(NULL,                                  // Parent
                wxID_ANY,                              // ID
                _T("OnePad configuration"),            // Title
@@ -279,10 +279,10 @@ PadDialog::PadDialog()
         m_bt_gamepad[i][Analog]->Disable();
     }
 
-    Bind(wxEVT_BUTTON, &PadDialog::OnButtonClicked, this);
+    Bind(wxEVT_BUTTON, &Dialog::OnButtonClicked, this);
 
     m_time_update_gui.SetOwner(this);
-    Bind(wxEVT_TIMER, &PadDialog::JoystickEvent, this);
+    Bind(wxEVT_TIMER, &Dialog::JoystickEvent, this);
     m_time_update_gui.Start(UPDATE_TIME, wxTIMER_CONTINUOUS);
 
     for (int i = 0; i < GAMEPAD_NUMBER; ++i)
@@ -294,10 +294,10 @@ PadDialog::PadDialog()
     }
 }
 
-void PadDialog::InitDialog()
+void Dialog::InitDialog()
 {
     GamePad::EnumerateGamePads(s_vgamePad); // activate gamepads
-    PADLoadConfig();                           // Load configuration from the ini file
+    LoadConfig();                           // Load configuration from the ini file
     repopulate();                           // Set label and fit simulated key array
 }
 
@@ -305,7 +305,7 @@ void PadDialog::InitDialog()
 /*********** Events functions ***********/
 /****************************************/
 
-void PadDialog::OnButtonClicked(wxCommandEvent &event)
+void Dialog::OnButtonClicked(wxCommandEvent &event)
 {
     // Affichage d'un message à chaque clic sur le bouton
     // Per Google Translate: Display a message each time the button is clicked.
@@ -414,12 +414,12 @@ void PadDialog::OnButtonClicked(wxCommandEvent &event)
     }
     else if (bt_id == Ok)                 // If the button ID is equals to the Ok button ID
     {
-        PADSaveConfig();                     // Save the configuration
+        SaveConfig();                     // Save the configuration
         Close();                          // Close the window
     }
     else if (bt_id == Apply)              // If the button ID is equals to the Apply button ID
     {
-        PADSaveConfig();                     // Save the configuration
+        SaveConfig();                     // Save the configuration
     }
     else if (bt_id == Cancel)             // If the button ID is equals to the cancel button ID
     {
@@ -427,7 +427,7 @@ void PadDialog::OnButtonClicked(wxCommandEvent &event)
     }
 }
 
-void PadDialog::JoystickEvent(wxTimerEvent &event)
+void Dialog::JoystickEvent(wxTimerEvent &event)
 {
 #ifdef SDL_BUILD
     u32 key;
@@ -578,7 +578,7 @@ void PadDialog::JoystickEvent(wxTimerEvent &event)
 /*********** Methods functions **********/
 /****************************************/
 
-void PadDialog::config_key(int pad, int key)
+void Dialog::config_key(int pad, int key)
 {
     bool captured = false;
     u32 key_pressed = 0;
@@ -637,7 +637,7 @@ void PadDialog::config_key(int pad, int key)
         KeyName(pad, key, m_simulatedKeys[pad][key]).c_str());
 }
 
-void PadDialog::clear_key(int pad, int key)
+void Dialog::clear_key(int pad, int key)
 {
     // Erase the keyboard binded key
     u32 keysim = m_simulatedKeys[pad][key];
@@ -666,7 +666,7 @@ void PadDialog::clear_key(int pad, int key)
 
 
 // Set button values
-void PadDialog::repopulate()
+void Dialog::repopulate()
 {
     for (int gamepad_id = 0; gamepad_id < GAMEPAD_NUMBER; ++gamepad_id)
     {
@@ -701,7 +701,7 @@ void PadDialog::repopulate()
 // Main
 void DisplayDialog()
 {
-    PadDialog dialog;
+    Dialog dialog;
 
     dialog.InitDialog();
     dialog.ShowModal();

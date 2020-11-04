@@ -24,8 +24,11 @@ check_no_parenthesis_in_path()
 detectOperatingSystem()
 check_compiler_version("7.0" "7.0")
 if(NOT MSVC)
-   set(CMAKE_C_COMPILER_LAUNCHER ccache)
-   set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+   find_program(CCACHE_FOUND ccache)
+   if(CCACHE_FOUND)
+       set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
+       set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_FOUND})
+   endif()
 endif()
 
 #-------------------------------------------------------------------------------
@@ -39,13 +42,6 @@ include(SelectPcsx2Plugins)
 # Must be done after SearchForStuff
 get_git_version_info()
 write_svnrev_h()
-set(CMAKE_BUILD_PO FALSE)
-if (LIBRETRO)
-   set(BUILD_REPLAY_LOADERS FALSE)
-#   add_definitions(-D__LIBRETRO__ -DDISABLE_RECORDING)
-#add_definitions(-D__LIBRETRO__ -DDISABLE_RECORDING -DwxUSE_UNICODE=0)
-add_definitions(-D__LIBRETRO__ -DDISABLE_RECORDING -DwxUSE_GUI=0)
-endif()
 
 if(NOT NO_TRANSLATION)
 # make the translation

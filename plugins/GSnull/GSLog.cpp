@@ -28,11 +28,7 @@ using namespace std;
 #include "GifTransfer.h"
 #include "null/GSnull.h"
 
-#ifdef BUILTIN_GS_PLUGIN
-extern std::string s_strLogPath;
-#else
 std::string s_strLogPath("logs");
-#endif
 
 namespace GSLog
 {
@@ -53,7 +49,7 @@ bool Open()
         result = false;
     }
 
-    WriteLn("GSnull plugin version %d,%d", GSrevision, GSbuild);
+    WriteLn("GSnull plugin version %d,%d", revision, build);
     WriteLn("GS init.");
 
     return result;
@@ -71,7 +67,7 @@ void Log(const char *fmt, ...)
 {
     va_list list;
 
-    if (!GSconf.Log || gsLog == NULL)
+    if (!conf.Log || gsLog == NULL)
         return;
 
     va_start(list, fmt);

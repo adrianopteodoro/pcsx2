@@ -889,6 +889,7 @@ void Pcsx2App::resetDebugger()
 void AppApplySettings( const AppConfig* oldconf )
 {
 	AffinityAssert_AllowFrom_MainUI();
+
 	ScopedCoreThreadPause paused_core;
 
 	g_Conf->Folders.ApplyDefaults();

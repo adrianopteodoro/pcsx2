@@ -237,8 +237,7 @@ bool Threading::Mutex::Acquire(const wxTimeSpan &timeout)
     }
 
 #else
-    AcquireWithoutYield();
-    return true;
+    return AcquireWithoutYield(timeout);
 #endif
 }
 

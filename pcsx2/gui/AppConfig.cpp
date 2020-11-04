@@ -1164,7 +1164,6 @@ void AppConfig_OnChangedSettingsFolder( bool overwrite )
 	PathDefs::GetDocuments().Mkdir();
 	GetSettingsFolder().Mkdir();
 
-
 	const wxString iniFilename( GetUiSettingsFilename() );
 
 	if( overwrite )
@@ -1189,9 +1188,7 @@ void AppConfig_OnChangedSettingsFolder( bool overwrite )
 		AppLoadSettings();
 
 	AppApplySettings();
-
 	AppSaveSettings();//Make sure both ini files are created if needed.
-
 }
 
 // --------------------------------------------------------------------------------------

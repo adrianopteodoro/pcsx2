@@ -103,10 +103,13 @@ set(GSdxSources
     Window/GSSetting.cpp
     Window/GSWnd.cpp
     )
-if(NOT MSVC)
-   set(GSdxSources ${GSdxSources}
-       GSdxResources.cpp)
+
+if(MSVC)
+   set(GSdxSources ${GSdxSources} GSdx.rc)
+else()
+   set(GSdxSources ${GSdxSources} GSdxResources.cpp)
 endif()
+
 if(NOT LIBRETRO)
    set(GSdxSources ${GSdxSources}
       GSCapture.cpp
@@ -186,9 +189,9 @@ set(GSdxHeaders
     xbyak/xbyak_mnemonic.h
     xbyak/xbyak_util.h
     )
+
 if(NOT MSVC)
-   set(GSdxHeaders ${GSdxHeaders}
-      GSdxResources.h)
+   set(GSdxHeaders ${GSdxHeaders} GSdxResources.h)
 endif()
 
 if(Windows)
@@ -202,8 +205,7 @@ if(Windows)
 #        GSVertexList.cpp
         Renderers/SW/GSVertexSW.cpp
         Window/GSCaptureDlg.cpp
-        Window/GSSettingsDlg.cpp
-        GSdx.rc
+        Window/GSSettingsDlg.cpp        
         )
 
     LIST(APPEND GSdxHeaders
@@ -211,27 +213,10 @@ if(Windows)
         Renderers/DX11/GSRendererDX11.h
         Renderers/DX11/GSTexture11.h
         Renderers/DX11/GSTextureCache11.h
+        Window/GSWndDX.h
+        Window/GSWndWGL.h
         resource.h
         targetver.h
-        )
-   if(NOT LIBRETRO)
-      LIST(APPEND GSdxSources
-          Window/GSWndDX.cpp
-          Window/GSWndWGL.cpp
-          )
-      LIST(APPEND GSdxHeaders
-          Window/GSWndDX.h
-          Window/GSWndWGL.h
-          )
-   endif()
-elseif(NOT LIBRETRO)
-    LIST(APPEND GSdxSources
-        Window/GSLinuxDialog.cpp
-        Window/GSWndEGL.cpp
-        )
-
-    LIST(APPEND GSdxHeaders
-        Window/GSWndEGL.h
         )
 endif()
 
@@ -239,12 +224,27 @@ if(LIBRETRO)
     LIST(APPEND GSdxSources
        Window/GSWndRetro.cpp
        )
-
     LIST(APPEND GSdxHeaders
         Window/GSWndRetro.h
        )
     include_directories(${CMAKE_SOURCE_DIR}/libretro)
+else()
+   if(Windows)
+      LIST(APPEND GSdxSources
+          Window/GSWndDX.cpp
+          Window/GSWndWGL.cpp
+          )
+   else()
+      LIST(APPEND GSdxSources
+          Window/GSLinuxDialog.cpp
+          Window/GSWndEGL.cpp
+          )
+      LIST(APPEND GSdxHeaders
+          Window/GSWndEGL.h
+          )
+   endif()
 endif()
+
 
 set(GSdxFinalSources
     ${GSdxSources}
@@ -269,8 +269,7 @@ endif()
 
 if(MSVC)
    set(GSdxFinalLibs ${GSdxFinalLibs} d3dcompiler d3d11 dxgi dxguid winmm strmiids opengl32 comsuppw comctl32)
-else()
-
+else(MSVC)
 set(RESOURCE_FILES
     res/logo-ogl.bmp
     res/fxaa.fx
@@ -282,8 +281,8 @@ set(RESOURCE_FILES
     res/glsl/tfx_fs.glsl
     res/glsl/tfx_vgs.glsl)
 
-   add_custom_glib_res("GSdxResources" "gsdx-res.xml" "GSdx_res" ${RESOURCE_FILES})
-endif()
+add_custom_glib_res("GSdxResources" "gsdx-res.xml" "GSdx_res" ${RESOURCE_FILES})
+endif(MSVC)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 if(MSVC)

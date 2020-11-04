@@ -17,21 +17,21 @@
 
 extern std::string s_strIniPath;
 
-void PADSaveConfig()
+void SaveConfig()
 {
     const std::string iniFile = s_strIniPath + "/Padnull.ini";
 
     PluginConf ini;
     if (!ini.Open(iniFile, READ_FILE)) {
         printf("failed to open %s\n", iniFile.c_str());
-        PADSaveConfig();  //save and return
+        SaveConfig();  //save and return
         return;
     }
     conf.Log = ini.ReadInt("logging", 0);
     ini.Close();
 }
 
-void PADLoadConfig()
+void LoadConfig()
 {
     const std::string iniFile(s_strIniPath + "/Padnull.ini");
 

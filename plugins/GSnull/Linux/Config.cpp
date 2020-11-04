@@ -24,7 +24,7 @@ using namespace std;
 #include "null/config.inl"
 
 extern string s_strIniPath;
-static PluginConf Ini;
+PluginConf Ini;
 
 void CFGabout()
 {
@@ -33,26 +33,26 @@ void CFGabout()
 
 void CFGconfigure()
 {
-    GSLoadConfig();
+    LoadConfig();
     ConfigureLogging();
-    GSSaveConfig();
+    SaveConfig();
 }
 
-void GSLoadConfig()
+void LoadConfig()
 {
     const std::string iniFile(s_strIniPath + "/GSNull.ini");
 
     if (!Ini.Open(iniFile, READ_FILE)) {
         g_plugin_log.WriteLn("failed to open %s", iniFile.c_str());
-        GSSaveConfig(); //save and return
+        SaveConfig(); //save and return
         return;
     }
 
-    GSconf.Log = Ini.ReadInt("logging", 0);
+    conf.Log = Ini.ReadInt("logging", 0);
     Ini.Close();
 }
 
-void GSSaveConfig()
+void SaveConfig()
 {
     const std::string iniFile(s_strIniPath + "/GSNull.ini");
 
@@ -61,6 +61,6 @@ void GSSaveConfig()
         return;
     }
 
-    Ini.WriteInt("logging", GSconf.Log);
+    Ini.WriteInt("logging", conf.Log);
     Ini.Close();
 }

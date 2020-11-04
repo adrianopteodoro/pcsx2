@@ -64,7 +64,7 @@ VU_Thread::VU_Thread(BaseVUmicroCPU*& _vuCPU, VURegs& _vuRegs) :
 		vuCPU(_vuCPU), vuRegs(_vuRegs)
 {
 	m_name = L"MTVU";
-#ifndef __LIBRETRO__
+#ifndef __LIBRETRO__ /* can't call thread functions/locks from dlload in windows */
 	Reset();
 #endif
 }

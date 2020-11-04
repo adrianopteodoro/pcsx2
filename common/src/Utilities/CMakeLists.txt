@@ -14,76 +14,46 @@ set(CommonFlags
 set(UtilitiesFinalFlags ${CommonFlags})
 
 # variable with all sources of this library
-if(LIBRETRO)
-	set(UtilitiesSources
-		VirtualMemory.cpp
-		../../include/Utilities/FixedPointTypes.inl
-		../../include/Utilities/EventSource.inl
-		../../include/Utilities/SafeArray.inl
-		Console.cpp
-		Exceptions.cpp
-		FastFormatString.cpp
-		IniInterface.cpp
-		Mutex.cpp
-		PathUtils.cpp
-		PrecompiledHeader.cpp
-		Perf.cpp
-		pxStreams.cpp
-		pxTranslate.cpp
-		RwMutex.cpp
-		StringHelpers.cpp
-		ThreadTools.cpp
-#		EventSource.cpp
-#		CheckedStaticBox.cpp
-#		pxCheckBox.cpp
-#		pxRadioPanel.cpp
+set(UtilitiesSources
+	VirtualMemory.cpp
+	../../include/Utilities/FixedPointTypes.inl
+	../../include/Utilities/EventSource.inl
+	../../include/Utilities/SafeArray.inl
+	Console.cpp
+	Exceptions.cpp
+	FastFormatString.cpp
+	IniInterface.cpp
+	Mutex.cpp
+	PathUtils.cpp
+	PrecompiledHeader.cpp
+	Perf.cpp
+	pxStreams.cpp
+	pxTranslate.cpp
+	RwMutex.cpp
+	StringHelpers.cpp
+	ThreadTools.cpp
+	wxAppWithHelpers.cpp
+	)
 
-#		pxStaticText.cpp
-#		pxWindowTextWriter.cpp
-#		ThreadingDialogs.cpp
-#		wxGuiTools.cpp
-#		wxHelpers.cpp
-
-
-		wxAppWithHelpers.cpp
-		)
-   if(NOT MSVC)
-   set(UtilitiesSources ${UtilitiesSources}
-      AlignedMalloc.cpp
-      Linux/LnxHostSys.cpp)
-   endif()
-else()
-	set(UtilitiesSources
-		VirtualMemory.cpp
+if(NOT MSVC)
+	set(UtilitiesSources ${UtilitiesSources}
 		AlignedMalloc.cpp
-		../../include/Utilities/FixedPointTypes.inl
-		../../include/Utilities/EventSource.inl
-		../../include/Utilities/SafeArray.inl
-		CheckedStaticBox.cpp
-		Console.cpp
-		EventSource.cpp
-		Exceptions.cpp
-		FastFormatString.cpp
-		IniInterface.cpp
 		Linux/LnxHostSys.cpp
-		Mutex.cpp
-		PathUtils.cpp
-		PrecompiledHeader.cpp
-		Perf.cpp
+		)
+endif()
+
+if(NOT LIBRETRO)
+	set(UtilitiesSources ${UtilitiesSources}
+		CheckedStaticBox.cpp
+		EventSource.cpp
 		pxCheckBox.cpp
 		pxRadioPanel.cpp
 		pxStaticText.cpp
-		pxStreams.cpp
-		pxTranslate.cpp
 		pxWindowTextWriter.cpp
-		RwMutex.cpp
-		StringHelpers.cpp
 		ThreadingDialogs.cpp
-		ThreadTools.cpp
-		wxAppWithHelpers.cpp
 		wxGuiTools.cpp
 		wxHelpers.cpp
-		)
+	)
 endif()
 
 # variable with all headers of this library
@@ -134,14 +104,13 @@ elseif(Windows)
 		Windows/WinThreads.cpp
 		Windows/WinHostSys.cpp
 		Windows/WinMisc.cpp
-      Semaphore.cpp
+		Semaphore.cpp
 	)
-# if(x86)
-#   LIST(APPEND UtilitiesSources
-#		x86/MemcpyFast.cpp
-#	)
-# endif()
-
+	if(NOT _M_X86_64)
+		LIST(APPEND UtilitiesSources
+			x86/MemcpyFast.cpp
+		)
+	endif()
 else()
 	LIST(APPEND UtilitiesSources
 		Linux/LnxThreads.cpp
@@ -168,7 +137,7 @@ endif()
 add_pcsx2_lib(${Output} "${UtilitiesFinalSources}" "${UtilitiesFinalLibs}" "${UtilitiesFinalFlags}")
 add_pcsx2_lib(${Output}_NO_TLS "${UtilitiesFinalSources}" "${UtilitiesFinalLibs}" "${UtilitiesFinalFlags} -DPCSX2_THREAD_LOCAL=0")
 
-#if(COMMAND target_precompile_headers)
-#	target_precompile_headers(${Output} PRIVATE PrecompiledHeader.h)
-#	target_precompile_headers(${Output}_NO_TLS PRIVATE PrecompiledHeader.h)
-#endif()
+if(COMMAND target_precompile_headers AND NOT CCACHE_FOUND)
+	target_precompile_headers(${Output} PRIVATE PrecompiledHeader.h)
+	target_precompile_headers(${Output}_NO_TLS PRIVATE PrecompiledHeader.h)
+endif()

@@ -295,6 +295,7 @@ void SysMtgsThread::ExecuteTaskInThread()
 
 	while(true) {
 		busy.Release();
+
 		// Performance note: Both of these perform cancellation tests, but pthread_testcancel
 		// is very optimized (only 1 instruction test in most cases), so no point in trying
 		// to avoid it.

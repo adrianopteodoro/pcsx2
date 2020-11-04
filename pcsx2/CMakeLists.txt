@@ -17,9 +17,13 @@ set(CommonFlags
     -Wstrict-aliasing # Allow to track strict aliasing issue.
     -Wno-parentheses
     -Wno-missing-braces
-    -Werror=date-time
-#    -DWX_PRECOMP
 	)
+
+if(CCACHE_FOUND)
+	set(CommonFlags ${CommonFlags} -Werror=date-time)
+else()
+	set(CommonFlags ${CommonFlags} -DWX_PRECOMP)
+endif()
 
 # Largely turning off because LegacyPluginAPI_Common in Plugins.h spams really badly in gcc 8 due to the memzero initialization.
 # Should probably be fixed properly, but for now this should work.
@@ -226,79 +230,56 @@ set(pcsx2CDVDHeaders
 	CDVD/IsoFS/SectorSource.h
 	CDVD/zlib_indexed.h
 	)
-if(LIBRETRO)
-	# SPU2 sources
-	set(pcsx2SPU2Sources
-		SPU2/ADSR.cpp
-		SPU2/Debug.cpp
-		SPU2/DplIIdecoder.cpp
-		SPU2/Dma.cpp
-		SPU2/Lowpass.cpp
-		SPU2/Mixer.cpp
-		SPU2/spu2.cpp
-		SPU2/ReadInput.cpp
-		SPU2/RegLog.cpp
-		SPU2/RegTable.cpp
-		SPU2/Reverb.cpp
-#		SPU2/SndOut.cpp
-#		SPU2/SndOut_SDL.cpp
-#		SPU2/SndOut_Portaudio.cpp
-		SPU2/spu2freeze.cpp
-		SPU2/spu2replay.cpp
-		SPU2/spu2sys.cpp
-#		SPU2/Timestretcher.cpp
-		SPU2/Wavedump_wav.cpp
-		SPU2/WavFile.cpp
-#		SPU2/wx/wxConfig.cpp
-		 )
-       if(MSVC)
-          set(pcsx2SPU2Sources ${pcsx2SPU2Sources}
-             SPU2/Windows/RealtimeDebugger.cpp
-             SPU2/Windows/ConfigDebug.cpp
-             SPU2/Windows/CfgHelpers.cpp
-             )
-       else()
-          set(pcsx2SPU2Sources ${pcsx2SPU2Sources}
-       #		SPU2/Linux/Alsa.cpp
-             SPU2/Linux/CfgHelpers.cpp
-       #		SPU2/Linux/Config.cpp
-             SPU2/Linux/ConfigDebug.cpp
-       #		SPU2/Linux/ConfigSoundTouch.cpp
-       #		SPU2/Linux/Dialogs.cpp
-          )
-       endif()
 
+# SPU2 sources
+set(pcsx2SPU2Sources
+	SPU2/ADSR.cpp
+	SPU2/Debug.cpp
+	SPU2/DplIIdecoder.cpp
+	SPU2/Dma.cpp
+	SPU2/Lowpass.cpp
+	SPU2/Mixer.cpp
+	SPU2/spu2.cpp
+	SPU2/ReadInput.cpp
+	SPU2/RegLog.cpp
+	SPU2/RegTable.cpp
+	SPU2/Reverb.cpp
+	SPU2/spu2freeze.cpp
+	SPU2/spu2replay.cpp
+	SPU2/spu2sys.cpp
+	SPU2/Wavedump_wav.cpp
+	SPU2/WavFile.cpp
+	 )
+
+if(MSVC)
+	set(pcsx2SPU2Sources ${pcsx2SPU2Sources}
+		SPU2/Windows/RealtimeDebugger.cpp
+		SPU2/Windows/CfgHelpers.cpp
+		SPU2/Windows/ConfigDebug.cpp
+		)
 else()
-	# SPU2 sources
-	set(pcsx2SPU2Sources
-		SPU2/ADSR.cpp
-		SPU2/Debug.cpp
-		SPU2/DplIIdecoder.cpp
-		SPU2/Dma.cpp
-		SPU2/Lowpass.cpp
-		SPU2/Mixer.cpp
-		SPU2/spu2.cpp
-		SPU2/ReadInput.cpp
-		SPU2/RegLog.cpp
-		SPU2/RegTable.cpp
-		SPU2/Reverb.cpp
+	set(pcsx2SPU2Sources ${pcsx2SPU2Sources}
+		SPU2/Linux/CfgHelpers.cpp
+		SPU2/Linux/ConfigDebug.cpp
+	)
+endif()
+
+if(NOT LIBRETRO)
+	set(pcsx2SPU2Sources ${pcsx2SPU2Sources}
 		SPU2/SndOut.cpp
 		SPU2/SndOut_SDL.cpp
 		SPU2/SndOut_Portaudio.cpp
-		SPU2/spu2freeze.cpp
-		SPU2/spu2replay.cpp
-		SPU2/spu2sys.cpp
 		SPU2/Timestretcher.cpp
-		SPU2/Wavedump_wav.cpp
-		SPU2/WavFile.cpp
-		SPU2/Linux/Alsa.cpp
-		SPU2/Linux/CfgHelpers.cpp
-		SPU2/Linux/Config.cpp
-		SPU2/Linux/ConfigDebug.cpp
-		SPU2/Linux/ConfigSoundTouch.cpp
-		SPU2/Linux/Dialogs.cpp
 		SPU2/wx/wxConfig.cpp
-		 )
+	)
+	if(NOT MSVC)
+		set(pcsx2SPU2Sources ${pcsx2SPU2Sources}
+			SPU2/Linux/Alsa.cpp
+			SPU2/Linux/Config.cpp
+			SPU2/Linux/ConfigSoundTouch.cpp
+			SPU2/Linux/Dialogs.cpp
+		)
+	endif()
 endif()
 
 # SPU2 headers
@@ -356,220 +337,118 @@ set(pcsx2DebugToolsHeaders
 	DebugTools/DisVUops.h
 	DebugTools/BiosDebugData.h)
 
-if(LIBRETRO)
-	# gui sources
-	set(pcsx2GuiSources
-		gui/AppAssert.cpp
-		gui/AppConfig.cpp
-		gui/AppCorePlugins.cpp
-		gui/AppCoreThread.cpp
-		gui/AppEventSources.cpp
-		gui/AppGameDatabase.cpp
-		gui/AppUserMode.cpp
-		gui/AppInit.cpp
-		gui/AppMain.cpp
-		gui/AppRes.cpp
-		gui/ConsoleLogger.cpp
-		gui/CpuUsageProvider.cpp
-#		gui/Dialogs/AboutBoxDialog.cpp
-#		gui/Dialogs/AssertionDialog.cpp
-#		gui/Dialogs/BaseConfigurationDialog.cpp
-#		gui/Dialogs/ConfirmationDialogs.cpp
-#		gui/Dialogs/ConvertMemoryCardDialog.cpp
-#		gui/Dialogs/CreateMemoryCardDialog.cpp
-#		gui/Dialogs/FirstTimeWizard.cpp
-#		gui/Dialogs/ImportSettingsDialog.cpp
-#		gui/Dialogs/LogOptionsDialog.cpp
-#		gui/Dialogs/McdConfigDialog.cpp
-#		gui/Dialogs/PickUserModeDialog.cpp
-#		gui/Dialogs/SysConfigDialog.cpp
-#		gui/Debugger/BreakpointWindow.cpp
-#		gui/Debugger/CtrlDisassemblyView.cpp
-#		gui/Debugger/CtrlRegisterList.cpp
-#		gui/Debugger/CtrlMemView.cpp
-#		gui/Debugger/DebuggerLists.cpp
-#		gui/Debugger/DisassemblyDialog.cpp
-#		gui/Debugger/DebugEvents.cpp
-#		gui/DriveList.cpp
-		gui/ExecutorThread.cpp
-#		gui/FrameForGS.cpp
-#		gui/GlobalCommands.cpp
-		gui/i18n.cpp
-#		gui/IsoDropTarget.cpp
-#		gui/MainFrame.cpp
-#		gui/MainMenuClicks.cpp
-		gui/MemoryCardFile.cpp
-		gui/MemoryCardFolder.cpp
-#		gui/MessageBoxes.cpp
-		gui/MSWstuff.cpp
-#		gui/Panels/BaseApplicableConfigPanel.cpp
-#		gui/Panels/BiosSelectorPanel.cpp
-#		gui/Panels/CpuPanel.cpp
-#		gui/Panels/DirPickerPanel.cpp
-#		gui/Panels/GameFixesPanel.cpp
-#		gui/Panels/GSWindowPanel.cpp
-#		gui/Panels/LogOptionsPanels.cpp
-#		gui/Panels/MemoryCardListPanel.cpp
-#		gui/Panels/MemoryCardListView.cpp
-#		gui/Panels/MiscPanelStuff.cpp
-#		gui/Panels/PathsPanel.cpp
-#		gui/Panels/PluginSelectorPanel.cpp
-#		gui/Panels/SpeedhacksPanel.cpp
-#		gui/Panels/VideoPanel.cpp
-#		gui/RecentIsoList.cpp
-#		gui/Saveslots.cpp
-#		gui/SysState.cpp
-#		gui/UpdateUI.cpp
-		)
-	# gui headers
-	set(pcsx2GuiHeaders
-		gui/AppAccelerators.h
-		gui/AppCommon.h
-		gui/AppConfig.h
-		gui/AppCorePlugins.h
-		gui/AppCoreThread.h
-		gui/AppEventListeners.h
-		gui/AppForwardDefs.h
-		gui/AppGameDatabase.h
-		gui/App.h
-		gui/ApplyState.h
-		gui/AppSaveStates.h
-		gui/ConsoleLogger.h
-		gui/CpuUsageProvider.h
-		gui/Debugger/BreakpointWindow.h
-		gui/Debugger/CtrlDisassemblyView.h
-		gui/Debugger/CtrlMemView.h
-		gui/Debugger/CtrlRegisterList.h
-		gui/Debugger/DebugEvents.h
-		gui/Debugger/DebuggerLists.h
-		gui/Debugger/DisassemblyDialog.h
-		gui/Dialogs/BaseConfigurationDialog.inl
-		gui/Dialogs/ConfigurationDialog.h
-		gui/Dialogs/LogOptionsDialog.h
-		gui/Dialogs/ModalPopups.h
-		gui/DriveList.h
-		gui/GSFrame.h
-		gui/i18n.h
-		gui/IsoDropTarget.h
-		gui/MainFrame.h
-		gui/MemoryCardFile.h
-		gui/MemoryCardFolder.h
-		gui/MSWstuff.h
-		gui/Panels/ConfigurationPanels.h
-		gui/Panels/LogOptionsPanels.h
-		gui/Panels/MemoryCardPanels.h
-		gui/pxEventThread.h
-		gui/RecentIsoList.h
-		gui/Saveslots.h
-		)
-else()
-	# gui sources
-	set(pcsx2GuiSources
-		gui/AppAssert.cpp
-		gui/AppConfig.cpp
-		gui/AppCorePlugins.cpp
-		gui/AppCoreThread.cpp
-		gui/AppEventSources.cpp
-		gui/AppGameDatabase.cpp
-		gui/AppUserMode.cpp
-		gui/AppInit.cpp
-		gui/AppMain.cpp
-		gui/AppRes.cpp
-		gui/ConsoleLogger.cpp
-		gui/CpuUsageProvider.cpp
-		gui/Dialogs/AboutBoxDialog.cpp
-		gui/Dialogs/AssertionDialog.cpp
-		gui/Dialogs/BaseConfigurationDialog.cpp
-		gui/Dialogs/ConfirmationDialogs.cpp
-		gui/Dialogs/ConvertMemoryCardDialog.cpp
-		gui/Dialogs/CreateMemoryCardDialog.cpp
-		gui/Dialogs/FirstTimeWizard.cpp
-		gui/Dialogs/ImportSettingsDialog.cpp
-		gui/Dialogs/LogOptionsDialog.cpp
-		gui/Dialogs/McdConfigDialog.cpp
-		gui/Dialogs/PickUserModeDialog.cpp
-		gui/Dialogs/SysConfigDialog.cpp
-		gui/Debugger/BreakpointWindow.cpp
-		gui/Debugger/CtrlDisassemblyView.cpp
-		gui/Debugger/CtrlRegisterList.cpp
-		gui/Debugger/CtrlMemView.cpp
-		gui/Debugger/DebuggerLists.cpp
-		gui/Debugger/DisassemblyDialog.cpp
-		gui/Debugger/DebugEvents.cpp
-		gui/DriveList.cpp
-		gui/ExecutorThread.cpp
-		gui/FrameForGS.cpp
-		gui/GlobalCommands.cpp
-		gui/i18n.cpp
-		gui/IsoDropTarget.cpp
-		gui/MainFrame.cpp
-		gui/MainMenuClicks.cpp
-		gui/MemoryCardFile.cpp
-		gui/MemoryCardFolder.cpp
-		gui/MessageBoxes.cpp
-		gui/MSWstuff.cpp
-		gui/Panels/BaseApplicableConfigPanel.cpp
-		gui/Panels/BiosSelectorPanel.cpp
-		gui/Panels/CpuPanel.cpp
-		gui/Panels/DirPickerPanel.cpp
-		gui/Panels/GameFixesPanel.cpp
-		gui/Panels/GSWindowPanel.cpp
-		gui/Panels/LogOptionsPanels.cpp
-		gui/Panels/MemoryCardListPanel.cpp
-		gui/Panels/MemoryCardListView.cpp
-		gui/Panels/MiscPanelStuff.cpp
-		gui/Panels/PathsPanel.cpp
-		gui/Panels/PluginSelectorPanel.cpp
-		gui/Panels/SpeedhacksPanel.cpp
-		gui/Panels/VideoPanel.cpp
-		gui/RecentIsoList.cpp
-		gui/Saveslots.cpp
-		gui/SysState.cpp
-		gui/UpdateUI.cpp
-		)
+# gui sources
+set(pcsx2GuiSources
+	gui/AppAssert.cpp
+	gui/AppConfig.cpp
+	gui/AppCorePlugins.cpp
+	gui/AppCoreThread.cpp
+	gui/AppEventSources.cpp
+	gui/AppGameDatabase.cpp
+	gui/AppUserMode.cpp
+	gui/AppInit.cpp
+	gui/AppMain.cpp
+	gui/AppRes.cpp
+	gui/ConsoleLogger.cpp
+	gui/CpuUsageProvider.cpp
+	gui/ExecutorThread.cpp
+	gui/i18n.cpp
+	gui/MemoryCardFile.cpp
+	gui/MemoryCardFolder.cpp
+	gui/MSWstuff.cpp
+	)
 
-	# gui headers
-	set(pcsx2GuiHeaders
-		gui/AppAccelerators.h
-		gui/AppCommon.h
-		gui/AppConfig.h
-		gui/AppCorePlugins.h
-		gui/AppCoreThread.h
-		gui/AppEventListeners.h
-		gui/AppForwardDefs.h
-		gui/AppGameDatabase.h
-		gui/App.h
-		gui/ApplyState.h
-		gui/AppSaveStates.h
-		gui/ConsoleLogger.h
-		gui/CpuUsageProvider.h
-		gui/Debugger/BreakpointWindow.h
-		gui/Debugger/CtrlDisassemblyView.h
-		gui/Debugger/CtrlMemView.h
-		gui/Debugger/CtrlRegisterList.h
-		gui/Debugger/DebugEvents.h
-		gui/Debugger/DebuggerLists.h
-		gui/Debugger/DisassemblyDialog.h
-		gui/Dialogs/BaseConfigurationDialog.inl
-		gui/Dialogs/ConfigurationDialog.h
-		gui/Dialogs/LogOptionsDialog.h
-		gui/Dialogs/ModalPopups.h
-		gui/DriveList.h
-		gui/GSFrame.h
-		gui/i18n.h
-		gui/IsoDropTarget.h
-		gui/MainFrame.h
-		gui/MemoryCardFile.h
-		gui/MemoryCardFolder.h
-		gui/MSWstuff.h
-		gui/Panels/ConfigurationPanels.h
-		gui/Panels/LogOptionsPanels.h
-		gui/Panels/MemoryCardPanels.h
-		gui/pxEventThread.h
-		gui/RecentIsoList.h
-		gui/Saveslots.h
-		)
-endif()
+if(NOT LIBRETRO)
+set(pcsx2GuiSources ${pcsx2GuiSources}
+	gui/Dialogs/AboutBoxDialog.cpp
+	gui/Dialogs/AssertionDialog.cpp
+	gui/Dialogs/BaseConfigurationDialog.cpp
+	gui/Dialogs/ConfirmationDialogs.cpp
+	gui/Dialogs/ConvertMemoryCardDialog.cpp
+	gui/Dialogs/CreateMemoryCardDialog.cpp
+	gui/Dialogs/FirstTimeWizard.cpp
+	gui/Dialogs/ImportSettingsDialog.cpp
+	gui/Dialogs/LogOptionsDialog.cpp
+	gui/Dialogs/McdConfigDialog.cpp
+	gui/Dialogs/PickUserModeDialog.cpp
+	gui/Dialogs/SysConfigDialog.cpp
+	gui/Debugger/BreakpointWindow.cpp
+	gui/Debugger/CtrlDisassemblyView.cpp
+	gui/Debugger/CtrlRegisterList.cpp
+	gui/Debugger/CtrlMemView.cpp
+	gui/Debugger/DebuggerLists.cpp
+	gui/Debugger/DisassemblyDialog.cpp
+	gui/Debugger/DebugEvents.cpp
+	gui/DriveList.cpp
+	gui/FrameForGS.cpp
+	gui/GlobalCommands.cpp
+	gui/IsoDropTarget.cpp
+	gui/MainFrame.cpp
+	gui/MainMenuClicks.cpp
+	gui/MessageBoxes.cpp
+	gui/Panels/BaseApplicableConfigPanel.cpp
+	gui/Panels/BiosSelectorPanel.cpp
+	gui/Panels/CpuPanel.cpp
+	gui/Panels/DirPickerPanel.cpp
+	gui/Panels/GameFixesPanel.cpp
+	gui/Panels/GSWindowPanel.cpp
+	gui/Panels/LogOptionsPanels.cpp
+	gui/Panels/MemoryCardListPanel.cpp
+	gui/Panels/MemoryCardListView.cpp
+	gui/Panels/MiscPanelStuff.cpp
+	gui/Panels/PathsPanel.cpp
+	gui/Panels/PluginSelectorPanel.cpp
+	gui/Panels/SpeedhacksPanel.cpp
+	gui/Panels/VideoPanel.cpp
+	gui/RecentIsoList.cpp
+	gui/Saveslots.cpp
+	gui/SysState.cpp
+	gui/UpdateUI.cpp
+	)
+endif(NOT LIBRETRO)
+
+# gui headers
+set(pcsx2GuiHeaders
+	gui/AppAccelerators.h
+	gui/AppCommon.h
+	gui/AppConfig.h
+	gui/AppCorePlugins.h
+	gui/AppCoreThread.h
+	gui/AppEventListeners.h
+	gui/AppForwardDefs.h
+	gui/AppGameDatabase.h
+	gui/App.h
+	gui/ApplyState.h
+	gui/AppSaveStates.h
+	gui/ConsoleLogger.h
+	gui/CpuUsageProvider.h
+	gui/Debugger/BreakpointWindow.h
+	gui/Debugger/CtrlDisassemblyView.h
+	gui/Debugger/CtrlMemView.h
+	gui/Debugger/CtrlRegisterList.h
+	gui/Debugger/DebugEvents.h
+	gui/Debugger/DebuggerLists.h
+	gui/Debugger/DisassemblyDialog.h
+	gui/Dialogs/BaseConfigurationDialog.inl
+	gui/Dialogs/ConfigurationDialog.h
+	gui/Dialogs/LogOptionsDialog.h
+	gui/Dialogs/ModalPopups.h
+	gui/DriveList.h
+	gui/GSFrame.h
+	gui/i18n.h
+	gui/IsoDropTarget.h
+	gui/MainFrame.h
+	gui/MemoryCardFile.h
+	gui/MemoryCardFolder.h
+	gui/MSWstuff.h
+	gui/Panels/ConfigurationPanels.h
+	gui/Panels/LogOptionsPanels.h
+	gui/Panels/MemoryCardPanels.h
+	gui/pxEventThread.h
+	gui/RecentIsoList.h
+	gui/Saveslots.h
+	)
+
 if(NOT MSVC)
 # Warning: the declaration of the .h are mandatory in case of resources files. It will ensure the creation
 # from the bin2cpp tools at right good moment (ie .h must be created before the pcsx2 compilation)
@@ -621,10 +500,11 @@ set(pcsx2LinuxSources
 	gui/CpuUsageProviderLnx.cpp
 	Linux/LnxConsolePipe.cpp
 	Linux/LnxFlatFileReader.cpp
-   )
+    )
 if(NOT LIBRETRO)
    set(pcsx2LinuxSources ${pcsx2LinuxSources}
-      Linux/LnxKeyCodes.cpp)
+      Linux/LnxKeyCodes.cpp
+   )
 endif()
 
 set(pcsx2OSXSources
@@ -782,7 +662,7 @@ set(pcsx2WindowsSources
 if(NOT LIBRETRO)
    set(pcsx2WindowsSources ${pcsx2WindowsSources}
    	windows/PatchBrowser.cpp
-   	)
+   )
 endif()
 # Windows headers
 set(pcsx2WindowsHeaders
@@ -861,60 +741,35 @@ set(pcsx2x86Headers
 	)
 
 # common Sources
-if(LIBRETRO)
-	set(Common
-		${pcsx2Sources}
-		${pcsx2Headers}
-		${pcsx2CDVDSources}
-		${pcsx2CDVDHeaders}
-		${pcsx2SPU2Sources}
-		${pcsx2SPU2Headers}
-		${pcsx2DebugToolsSources}
-		${pcsx2GuiSources}
-		${pcsx2GuiResources}
-		${pcsx2GuiHeaders}
-		${pcsx2IPUSources}
-		${pcsx2IPUHeaders}
-		${pcsx2ps2Sources}
-		${pcsx2ps2Headers}
-#		${pcsx2RecordingSources}
-#		${pcsx2RecordingVirtualPadResources}
-#		${pcsx2RecordingHeaders}
-		${pcsx2SystemSources}
-		${pcsx2SystemHeaders}
-		${pcsx2UtilitiesSources}
-		${pcsx2UtilitiesHeaders}
-		${pcsx2x86Sources}
-		${pcsx2x86Headers}
-		${pcsx2ZipToolsSources}
-		${pcsx2ZipToolsHeaders})
-else()
-	set(Common
-		${pcsx2Sources}
-		${pcsx2Headers}
-		${pcsx2CDVDSources}
-		${pcsx2CDVDHeaders}
-		${pcsx2SPU2Sources}
-		${pcsx2SPU2Headers}
-		${pcsx2DebugToolsSources}
-		${pcsx2GuiSources}
-		${pcsx2GuiResources}
-		${pcsx2GuiHeaders}
-		${pcsx2IPUSources}
-		${pcsx2IPUHeaders}
-		${pcsx2ps2Sources}
-		${pcsx2ps2Headers}
+set(Common
+	${pcsx2Sources}
+	${pcsx2Headers}
+	${pcsx2CDVDSources}
+	${pcsx2CDVDHeaders}
+	${pcsx2SPU2Sources}
+	${pcsx2SPU2Headers}
+	${pcsx2DebugToolsSources}
+	${pcsx2GuiSources}
+	${pcsx2GuiResources}
+	${pcsx2GuiHeaders}
+	${pcsx2IPUSources}
+	${pcsx2IPUHeaders}
+	${pcsx2ps2Sources}
+	${pcsx2ps2Headers}
+	${pcsx2SystemSources}
+	${pcsx2SystemHeaders}
+	${pcsx2UtilitiesSources}
+	${pcsx2UtilitiesHeaders}
+	${pcsx2x86Sources}
+	${pcsx2x86Headers}
+	${pcsx2ZipToolsSources}
+	${pcsx2ZipToolsHeaders})
+if(NOT LIBRETRO)
+	set(Common ${Common}
 		${pcsx2RecordingSources}
 		${pcsx2RecordingVirtualPadResources}
 		${pcsx2RecordingHeaders}
-		${pcsx2SystemSources}
-		${pcsx2SystemHeaders}
-		${pcsx2UtilitiesSources}
-		${pcsx2UtilitiesHeaders}
-		${pcsx2x86Sources}
-		${pcsx2x86Headers}
-		${pcsx2ZipToolsSources}
-		${pcsx2ZipToolsHeaders})
+	)
 endif()
 
 # platform sources
@@ -1021,9 +876,9 @@ endif()
 
 if(MSVC)
 #   include_directories(x86/ix86-32 IPU System)
+#   add_definitions(-D_ARCH_32=1 -D_M_X86_32) #32-bit
    add_definitions(-D_M_X86 -D__i386__ -DTIXML_USE_STL -D_SCL_SECURE_NO_WARNINGS)
    add_definitions(-D_ARCH_64=1 -D_M_X86_64 -D__M_X86_64) #64-bit
-#   add_definitions(-D_ARCH_32=1 -D_M_X86_32) #32-bit
    set(pcsx2FinalLibs ${pcsx2FinalLibs} baseclasses)
    set(pcsx2FinalLibs ${pcsx2FinalLibs} comctl32 ws2_32 shlwapi winmm rpcrt4)
 endif()
@@ -1061,10 +916,10 @@ else()
 endif()
 target_compile_features(${Output} PRIVATE cxx_std_17)
 
-#if(COMMAND target_precompile_headers)
-#	message("Using precompiled headers.")
-#	target_precompile_headers(${Output} PRIVATE PrecompiledHeader.h)
-#endif()
+if(COMMAND target_precompile_headers AND NOT CCACHE_FOUND)
+	message("Using precompiled headers.")
+	target_precompile_headers(${Output} PRIVATE PrecompiledHeader.h)
+endif()
 
 if (APPLE)
 	# MacOS defaults to having a maximum protection of the __DATA segment of rw (non-executable)

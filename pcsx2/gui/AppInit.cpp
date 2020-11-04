@@ -212,9 +212,7 @@ void Pcsx2App::AllocateCoreStuffs()
 
 #if wxUSE_GUI
 			exconf += exconf.Heading(pxE( L"Note: Recompilers are not necessary for PCSX2 to run, however they typically improve emulation speed substantially. You may have to manually re-enable the recompilers listed above, if you resolve the errors." ));
-#ifndef __LIBRETRO__
 			pxIssueConfirmation( exconf, MsgButtons().OK() );
-#endif
 #endif
 		}
 	}
