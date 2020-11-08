@@ -583,7 +583,8 @@ bool retro_load_game(const struct retro_game_info* game)
 	{
 		retro_hw_context_type context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
 		environ_cb(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &context_type);
-		return set_hw_render(context_type);
+		if(set_hw_render(context_type))
+			return true;
 	}
 #ifdef _WIN32
 	if (Options::renderer == "D3D11")
