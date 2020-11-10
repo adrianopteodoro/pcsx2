@@ -902,14 +902,13 @@ void AppApplySettings( const AppConfig* oldconf )
 	g_Conf->EmuOptions.BiosFilename = g_Conf->FullpathToBios();
 #ifndef __LIBRETRO__
 	RelocateLogfile();
-#endif
 
 	if( (oldconf == NULL) || (oldconf->LanguageCode.CmpNoCase(g_Conf->LanguageCode)) )
 	{
 		wxDoNotLogInThisScope please;
 		i18n_SetLanguage( g_Conf->LanguageId, g_Conf->LanguageCode );
 	}
-
+#endif
 	
 	CorePlugins.SetSettingsFolder( GetSettingsFolder().ToString() );
 

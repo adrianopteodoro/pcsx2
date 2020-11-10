@@ -349,8 +349,6 @@ void retro_init(void)
 		pxDoAssert = NULL;
 		pxDoOutOfMemory = SysOutOfMemory_EmergencyResponse;
 		g_Conf = std::make_unique<AppConfig>();
-		i18n_SetLanguage(wxLANGUAGE_DEFAULT);
-		i18n_SetLanguagePath();
 		GetSysExecutorThread().Start();
 		pcsx2->DetectCpuAndUserMode();
 		pcsx2->AllocateCoreStuffs();
@@ -407,6 +405,7 @@ void retro_deinit(void)
 
 	// WIN32 doesn't allow canceling threads from global constructors/destructors in a shared library.
 	vu1Thread.Cancel();
+	//	GetSysExecutorThread().ShutdownQueue();
 	GetSysExecutorThread().Cancel();
 //	GetVmMemory().ReleaseAll();
 //	pcsx2->CleanupOnExit();
@@ -795,12 +794,6 @@ public:
 		const char* system = nullptr;
 		environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system);
 		return Path::Combine(system, "pcsx2/PCSX2");
-	}
-	wxString GetResourcesDir() const
-	{
-		const char* system = nullptr;
-		environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system);
-		return Path::Combine(system, "pcsx2/Langs");
 	}
 	wxString GetUserLocalDataDir() const
 	{
