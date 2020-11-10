@@ -25,6 +25,7 @@
 #include "ps2/BiosTools.h"
 #include "CDVD/CDVD.h"
 #include "MTVU.h"
+#include "Counters.h"
 
 #define THREADED_AUDIO
 
@@ -815,3 +816,27 @@ wxStandardPaths& Pcsx2AppTraits::GetStandardPaths()
 	return stdPaths;
 }
 #endif
+
+void SaveStateBase::InputRecordingFreeze()
+{
+#if 0
+	FreezeTag("InputRecording");
+	Freeze(g_FrameCount);
+#endif
+}
+
+void Pcsx2App::enterDebugMode()
+{
+}
+
+void Pcsx2App::leaveDebugMode()
+{
+}
+
+void Pcsx2App::resetDebugger()
+{
+}
+
+void Pcsx2App::BuildCommandHash()
+{
+}

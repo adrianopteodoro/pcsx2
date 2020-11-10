@@ -19,9 +19,9 @@
 #include "AppGameDatabase.h"
 
 #include <wx/stdpaths.h>
-#if wxUSE_GUI
+
 #include "Debugger/DisassemblyDialog.h"
-#endif
+
 #include "Utilities/Threading.h"
 
 #include "ps2/BiosTools.h"
@@ -214,9 +214,8 @@ void AppCoreThread::OnResumeReady()
 {
 	wxGetApp().SysApplySettings();
 	wxGetApp().PostMethod(AppSaveSettings);
-#ifndef __LIBRETRO__
+
 	sApp.PostAppMethod(&Pcsx2App::leaveDebugMode);
-#endif
 	_parent::OnResumeReady();
 }
 
@@ -228,9 +227,7 @@ void AppCoreThread::OnPause()
 
 void AppCoreThread::OnPauseDebug()
 {
-#ifndef __LIBRETRO__
 	sApp.PostAppMethod(&Pcsx2App::enterDebugMode);
-#endif
 	_parent::OnPause();
 }
 
@@ -491,9 +488,8 @@ static void _ApplySettings(const Pcsx2Config& src, Pcsx2Config& fixup)
 	consoleTitle += L" [" + gameCRC.MakeUpper() + L"]" + gameCompat + gameFixes + gamePatch + gameCheats + gameWsHacks;
 	if (ingame)
 		Console.SetTitle(consoleTitle);
-#ifndef __LIBRETRO__
+
 	gsUpdateFrequency(fixup);
-#endif
 }
 
 // FIXME: This function is not for general consumption. Its only consumer (and
@@ -594,9 +590,9 @@ void AppCoreThread::OnCleanupInThread()
 
 void AppCoreThread::VsyncInThread()
 {
-//#ifndef __LIBRETRO__
+#ifndef __LIBRETRO__
 	wxGetApp().LogicalVsync();
-//#endif
+#endif
 	_parent::VsyncInThread();
 }
 

@@ -47,44 +47,11 @@ set(onepadFinalFlags
     -Wno-parentheses
     )
 endif()
-if(LIBRETRO)
+
 # onepad sources
 set(onepadSources
     controller.cpp
-#    GamePad.cpp
-#    SDL/joystick.cpp
-#    keyboard.cpp
-#    KeyStatus.cpp
     onepad.cpp
-    state_management.cpp)
-   if(NOT MSVC)
-   set(onepadSources ${onepadSources}
-       resources.cpp)
-   endif()
- # onepad headers
- set(onepadHeaders
-     bitwise.h
-     controller.h
-     GamePad.h
-     SDL/joystick.h
-#     keyboard.h
-     KeyStatus.h
-     onepad.h
-     state_management.h)
-     if(NOT MSVC)
-     set(onepadHeaders ${onepadHeaders}
-        resources.h)
-     endif()
-else()
-# onepad sources
-set(onepadSources
-    controller.cpp
-    GamePad.cpp
-    SDL/joystick.cpp
-    keyboard.cpp
-    KeyStatus.cpp
-    onepad.cpp
-    resources.cpp
     state_management.cpp)
 
 # onepad headers
@@ -96,8 +63,19 @@ set(onepadHeaders
     keyboard.h
     KeyStatus.h
     onepad.h
-    resources.h
     state_management.h)
+
+if(NOT MSVC)
+   set(onepadSources ${onepadSources} resources.cpp)
+    set(onepadHeaders ${onepadHeaders} resources.h)
+endif()
+
+if(NOT LIBRETRO)
+set(onepadSources ${onepadSources}
+    GamePad.cpp
+    SDL/joystick.cpp
+    keyboard.cpp
+    KeyStatus.cpp)
 
 # onepad wx sources
 set(onepadwxSources
@@ -111,6 +89,7 @@ set(onepadwxHeaders
     ${wx_headers}/opPanel.h
     ${wx_headers}/GamepadConfiguration.h
     ${wx_headers}/JoystickConfiguration.h)
+
 # onepad Linux sources
 set(onepadLinuxSources
     ${linux_sources}/ini.cpp
@@ -124,11 +103,10 @@ set(onepadWindowsSources)
 
 # onepad Windows headers
 set(onepadWindowsHeaders)
-endif()
-if(NOT LIBRETRO)
-   set(onepadFinalLibs ${SDL2_LIBRARIES})
-   add_definitions(-DSDL_BUILD)
-endif()
+
+set(onepadFinalLibs ${SDL2_LIBRARIES})
+add_definitions(-DSDL_BUILD)
+endif(NOT LIBRETRO)
 
 set(onepadFinalLibs
     ${onepadFinalLibs}
@@ -155,13 +133,10 @@ if(NOT GTKn_FOUND)
    include_directories(${GLIB_INCLUDE_DIRS})
 endif()
 
-
 ### Generate the resources files
 file(MAKE_DIRECTORY ${compiled_images})
 
-if(MSVC)
-   #todo
-else()
+if(NOT MSVC)
 foreach(result_file IN ITEMS
         analog circle cross dp_bottom dp_left dp_right dp_up dualshock2
         joystick_cursor l1 r1 l2 r2 l3 r3 select square start triangle arrow_up
@@ -173,8 +148,8 @@ endforeach()
 
 set(RESOURCE_FILES res/game_controller_db.txt)
 
-   add_custom_glib_res("resources" "onepad-res.xml" "onepad_res" ${RESOURCE_FILES})
-endif()
+add_custom_glib_res("resources" "onepad-res.xml" "onepad_res" ${RESOURCE_FILES})
+endif(NOT MSVC)
 
 if(BUILTIN_PAD)
     add_pcsx2_lib(${Output} "${onepadFinalSources}" "${onepadFinalLibs}" "${onepadFinalFlags}")

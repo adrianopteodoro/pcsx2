@@ -509,19 +509,16 @@ public:
 	void DispatchEvent( CoreThreadStatus evt );
 	void DispatchUiSettingsEvent( IniInterface& ini );
 	void DispatchVmSettingsEvent( IniInterface& ini );
-#ifndef __LIBRETRO__
+
 	bool HasGUI() { return m_UseGUI; };
 	bool ExitPromptWithNoGUI() { return m_NoGuiExitPrompt; };
-#endif
 
 	// ----------------------------------------------------------------------------
 protected:
 	int								m_PendingSaves;
 	bool							m_ScheduledTermination;
-#ifndef __LIBRETRO__
 	bool							m_UseGUI;
 	bool							m_NoGuiExitPrompt;
-#endif
 
 	Threading::Mutex				m_mtx_Resources;
 	Threading::Mutex				m_mtx_LoadingGameDB;
@@ -541,7 +538,7 @@ protected:
 	std::unique_ptr<PipeRedirectionBase> m_StdoutRedirHandle;
 	std::unique_ptr<PipeRedirectionBase> m_StderrRedirHandle;
 
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 	std::unique_ptr<RecentIsoList> m_RecentIsoList;
 	std::unique_ptr<DriveList> m_DriveList;
 #endif
@@ -615,9 +612,7 @@ public:
 
 	void DetectCpuAndUserMode();
 	void OpenProgramLog();
-#ifndef __LIBRETRO__
 	void OpenMainFrame();
-#endif
 	void PrepForExit();
 	void CleanupRestartable();
 	void CleanupResources();
@@ -638,13 +633,11 @@ public:
 	// --------------------------------------------------------------------------
 	// All of these accessors cache the resources on first use and retain them in
 	// memory until the program exits.
-#ifndef __LIBRETRO__
+	pxAppResources&		GetResourceCache();
+#if wxUSE_GUI
 	wxMenu&				GetRecentIsoMenu();
 	RecentIsoManager&	GetRecentIsoManager();
 	wxMenu&				GetDriveListMenu();
-#endif
-	pxAppResources&		GetResourceCache();
-#ifndef __LIBRETRO__
 	const wxIconBundle&	GetIconBundle();
 	const wxBitmap&		GetLogoBitmap();
 	const wxBitmap&		GetScreenshotBitmap();
@@ -705,10 +698,9 @@ protected:
 
 	void OnScheduledTermination( wxTimerEvent& evt );
 	void OnSysExecutorTaskTimeout( wxTimerEvent& evt );
-#ifndef __LIBRETRO__
 	void OnEmuKeyDown( wxKeyEvent& evt );
 	void OnDestroyWindow( wxWindowDestroyEvent& evt );
-#endif
+
 	// ----------------------------------------------------------------------------
 	//      Override wx default exception handling behavior
 	// ----------------------------------------------------------------------------

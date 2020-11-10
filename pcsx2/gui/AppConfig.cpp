@@ -15,9 +15,7 @@
 
 #include "PrecompiledHeader.h"
 #include "App.h"
-#if wxUSE_GUI
 #include "MainFrame.h"
-#endif
 #include "Plugins.h"
 
 #include "MemoryCardFile.h"

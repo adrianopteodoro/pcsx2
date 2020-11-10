@@ -12,7 +12,7 @@
  *  You should have received a copy of the GNU General Public License along with PCSX2.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if wxUSE_GUI
 #pragma once
 #include <wx/wx.h>
 #include <wx/notebook.h>
@@ -117,3 +117,4 @@ private:
 	wxBoxSizer* topSizer;
 	wxButton *breakRunButton, *stepIntoButton, *stepOverButton, *stepOutButton, *breakpointButton, *helpButton;
 };
+#endif

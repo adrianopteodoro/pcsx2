@@ -12,7 +12,7 @@
  *  You should have received a copy of the GNU General Public License along with PCSX2.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if wxUSE_GUI
 #pragma once
 
 #include "App.h"
@@ -105,3 +105,4 @@ namespace Dialogs
 
 wxWindowID pxIssueConfirmation( wxDialogWithHelpers& confirmDlg, const MsgButtons& buttons );
 wxWindowID pxIssueConfirmation( wxDialogWithHelpers& confirmDlg, const MsgButtons& buttons, const wxString& disablerKey );
+#endif

@@ -14,21 +14,18 @@
  */
 
 #include "PrecompiledHeader.h"
-#ifndef __LIBRETRO__
 #include "MainFrame.h"
 #include "AppAccelerators.h"
-#endif
 #include "ConsoleLogger.h"
 #include "MSWstuff.h"
 #include "MTVU.h" // for thread cancellation on shutdown
 
 #include "Utilities/IniInterface.h"
-#ifndef __LIBRETRO__
 #include "DebugTools/Debug.h"
 #include "Dialogs/ModalPopups.h"
 
 #include "Debugger/DisassemblyDialog.h"
-#endif
+
 #ifndef DISABLE_RECORDING
 #   include "Recording/InputRecording.h"
 #	include "Recording/VirtualPad/VirtualPad.h"
@@ -212,6 +209,7 @@ void Pcsx2App::AllocateCoreStuffs()
 
 #if wxUSE_GUI
 			exconf += exconf.Heading(pxE( L"Note: Recompilers are not necessary for PCSX2 to run, however they typically improve emulation speed substantially. You may have to manually re-enable the recompilers listed above, if you resolve the errors." ));
+
 			pxIssueConfirmation( exconf, MsgButtons().OK() );
 #endif
 		}
@@ -452,9 +450,7 @@ bool Pcsx2App::OnInit()
 	pxDoOutOfMemory	= SysOutOfMemory_EmergencyResponse;
 
 	g_Conf = std::make_unique<AppConfig>();
-#if wxUSE_GUI
     wxInitAllImageHandlers();
-#endif
 
 	Console.WriteLn("Applying operating system default language...");
 	{
@@ -757,10 +753,8 @@ Pcsx2App::Pcsx2App()
 
 	m_PendingSaves			= 0;
 	m_ScheduledTermination	= false;
-#ifndef __LIBRETRO__
 	m_UseGUI				= true;
 	m_NoGuiExitPrompt		= true;
-#endif
 
 	m_id_MainFrame		= wxID_ANY;
 	m_id_GsFrame		= wxID_ANY;
@@ -769,9 +763,7 @@ Pcsx2App::Pcsx2App()
 	m_ptr_ProgramLog	= NULL;
 
 	SetAppName( L"PCSX2" );
-#ifndef __LIBRETRO__
 	BuildCommandHash();
-#endif
 }
 
 Pcsx2App::~Pcsx2App()
@@ -785,11 +777,11 @@ Pcsx2App::~Pcsx2App()
 
 void Pcsx2App::CleanUp()
 {
-#ifndef __LIBRETRO__
 	CleanupResources();
 	m_Resources		= NULL;
+#if wxUSE_GUI
 	m_RecentIsoList	= NULL;
-
+#endif
 	DisableDiskLogging();
 
 	if( emuLog != NULL )
@@ -799,7 +791,6 @@ void Pcsx2App::CleanUp()
 	}
 
 	_parent::CleanUp();
-#endif
 }
 
 __fi wxString AddAppName( const wxChar* fmt )
