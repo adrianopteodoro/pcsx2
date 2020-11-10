@@ -95,9 +95,7 @@ public:
     {
         if (obj == NULL)
             return;
-#ifndef __LIBRETRO__
         DeleteThread(*obj);
-#endif
     }
 
     void PostCommand(void *clientData, int evtType, int intParam = 0, long longParam = 0, const wxString &stringParam = wxEmptyString);
@@ -132,13 +130,11 @@ protected:
     void IdleEventDispatcher(const wxChar *action = wxEmptyString);
 
     void OnIdleEvent(wxIdleEvent &evt);
-    void OnIdleEventTimeout(wxTimerEvent &evt);
-#if wxUSE_GUI
     void OnStartIdleEventTimer(wxCommandEvent &evt);
+    void OnIdleEventTimeout(wxTimerEvent &evt);
     void OnDeleteObject(wxCommandEvent &evt);
     void OnDeleteThread(wxCommandEvent &evt);
     void OnSynchronousCommand(pxSynchronousCommandEvent &evt);
-#endif
     void OnInvokeAction(pxActionEvent &evt);
 };
 

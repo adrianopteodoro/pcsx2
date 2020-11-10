@@ -600,12 +600,14 @@ public:
 	void resetDebugger();
 #if wxUSE_GUI
 	bool HasMainFrame() const	{ return GetMainFramePtr() != NULL; }
+#else
+	bool HasMainFrame() const	{ return false; }
+#endif
 
 	void OpenGsPanel();
 	void CloseGsPanel();
 	void OnGsFrameClosed( wxWindowID id );
 	void OnMainFrameClosed( wxWindowID id );
-#endif
 
 	// --------------------------------------------------------------------------
 	//  Startup / Shutdown Helpers

@@ -301,7 +301,7 @@
 #define wxUSE_TOOLBAR 1
 #define wxUSE_TOOLBAR_NATIVE 1
 
-#define wxUSE_NOTEBOOK 1
+#define wxUSE_NOTEBOOK 0
 
 #define wxUSE_LISTBOOK 1
 

@@ -28,6 +28,9 @@
 #include "DebugTools/Debug.h"
 #include <memory>
 
+#if !wxUSE_GUI
+const wxPoint wxDefaultPosition(wxDefaultCoord, wxDefaultCoord);
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////
 // PathDefs Namespace -- contains default values for various pcsx2 path names and locations.
 //
@@ -508,14 +511,12 @@ bool IsPortable()
 }
 
 AppConfig::AppConfig()
-	: SysSettingsTabName( L"Cpu" )
+	: MainGuiPosition( wxDefaultPosition )
+	, SysSettingsTabName( L"Cpu" )
 	, McdSettingsTabName( L"none" )
 	, ComponentsTabName( L"Plugins" )
 	, AppSettingsTabName( L"none" )
 	, GameDatabaseTabName( L"none" )
-#if wxUSE_GUI
-	, MainGuiPosition( wxDefaultPosition )
-#endif
 {
 	LanguageId			= wxLANGUAGE_DEFAULT;
 	LanguageCode		= L"default";
@@ -627,9 +628,7 @@ void AppConfig::LoadSaveMemcards( IniInterface& ini )
 
 void AppConfig::LoadSaveRootItems( IniInterface& ini )
 {
-#if wxUSE_GUI
 	IniEntry( MainGuiPosition );
-#endif
 	IniEntry( SysSettingsTabName );
 	IniEntry( McdSettingsTabName );
 	IniEntry( ComponentsTabName );
@@ -673,9 +672,8 @@ void AppConfig::LoadSave( IniInterface& ini )
 	LoadSaveMemcards( ini );
 
 	// Process various sub-components:
-#if wxUSE_GUI
 	ProgLogBox		.LoadSave( ini, L"ProgramLog" );
-#endif
+
 	Folders			.LoadSave( ini );
 	BaseFilenames	.LoadSave( ini );
 	GSWindow		.LoadSave( ini );
@@ -687,7 +685,7 @@ void AppConfig::LoadSave( IniInterface& ini )
 
 	ini.Flush();
 }
-#if wxUSE_GUI
+
 // ------------------------------------------------------------------------
 AppConfig::ConsoleLogOptions::ConsoleLogOptions()
 	: DisplayPosition( wxDefaultPosition )
@@ -710,7 +708,7 @@ void AppConfig::ConsoleLogOptions::LoadSave( IniInterface& ini, const wxChar* lo
 	IniEntry( FontSize );
 	IniEntry( Theme );
 }
-#endif
+
 void AppConfig::FolderOptions::ApplyDefaults()
 {
 	if( UseDefaultBios )		Bios		  = PathDefs::GetBios();
@@ -837,10 +835,9 @@ AppConfig::GSWindowOptions::GSWindowOptions()
 	StretchY				= 100;
 	OffsetX					= 0;
 	OffsetY					= 0;
-#if wxUSE_GUI
+
 	WindowSize				= wxSize( 640, 480 );
 	WindowPos				= wxDefaultPosition;
-#endif
 	IsMaximized				= false;
 	IsFullscreen			= false;
 	EnableVsyncWindowFlag	= false;
@@ -862,9 +859,10 @@ void AppConfig::GSWindowOptions::SanityCheck()
 	// move into view:
 	if( !wxGetDisplayArea().Contains( wxRect( WindowPos, wxSize( 48,48 ) ) ) )
 		WindowPos = wxDefaultPosition;
-#endif
+
 	if( (uint)AspectRatio >= (uint)AspectRatio_MaxCount )
 		AspectRatio = AspectRatio_4_3;
+#endif
 }
 
 void AppConfig::GSWindowOptions::LoadSave( IniInterface& ini )
@@ -876,10 +874,9 @@ void AppConfig::GSWindowOptions::LoadSave( IniInterface& ini )
 	IniEntry( AlwaysHideMouse );
 	IniEntry( DisableResizeBorders );
 	IniEntry( DisableScreenSaver );
-#if wxUSE_GUI
+
 	IniEntry( WindowSize );
 	IniEntry( WindowPos );
-#endif
 	IniEntry( IsMaximized );
 	IniEntry( IsFullscreen );
 	IniEntry( EnableVsyncWindowFlag );
@@ -1126,9 +1123,10 @@ wxFileConfig* OpenFileConfig( const wxString& filename )
 {
 	return new wxFileConfig( wxEmptyString, wxEmptyString, filename, wxEmptyString, wxCONFIG_USE_RELATIVE_PATH );
 }
-#ifndef __LIBRETRO__
+
 void RelocateLogfile()
 {
+#ifndef __LIBRETRO__
 	g_Conf->Folders.Logs.Mkdir();
 
 	wxString newlogname( Path::Combine( g_Conf->Folders.Logs.ToString(), L"emuLog.txt" ) );
@@ -1149,8 +1147,9 @@ void RelocateLogfile()
 	}
 
 	wxGetApp().EnableAllLogging();
-}
 #endif
+}
+
 // Parameters:
 //   overwrite - this option forces the current settings to overwrite any existing settings
 //      that might be saved to the configured ini/settings folder.
@@ -1275,8 +1274,8 @@ AppIniLoader::AppIniLoader()
 static void LoadUiSettings()
 {
 	AppIniLoader loader;
-#ifndef __LIBRETRO__
 	ConLog_LoadSaveSettings( loader );
+#if wxUSE_GUI
 	SysTraceLog_LoadSaveSettings( loader );
 #endif
 	g_Conf = std::make_unique<AppConfig>();
@@ -1350,10 +1349,11 @@ static void SaveUiSettings()
 #endif
 	AppIniSaver saver;
 	g_Conf->LoadSave( saver );
-#ifndef __LIBRETRO__
 	ConLog_LoadSaveSettings( saver );
+#if wxUSE_GUI
 	SysTraceLog_LoadSaveSettings( saver );
 #endif
+
 	sApp.DispatchUiSettingsEvent( saver );
 }
 

@@ -141,14 +141,15 @@ bool AppDoAssert( const DiagnosticOrigin& origin, const wxChar *msg )
 		windowmsg += msg;
 	else if( origin.condition != NULL )
 		windowmsg += origin.condition;
-#ifdef __LIBRETRO__
-	return true;
-#else
+
+#if wxUSE_GUI
 	int retval = Msgbox::Assertion( windowmsg, dbgmsg + L"\nStacktrace:\n" + trace );
 
 	if( retval == wxID_YES ) return true;
 	if( retval == wxID_IGNORE ) disableAsserts = true;
 
 	return false;
+#else
+	return true;
 #endif
 }

@@ -15,12 +15,38 @@
 
 #pragma once
 #include "wx/windowid.h"
+#include "wx/event.h"
 
-#if wxUSE_GUI
+#if !wxUSE_GUI
+class WXDLLIMPEXP_CORE wxCommandEvent : public wxEvent,
+                                        public wxEventBasicPayloadMixin
+{
+public:
+    wxCommandEvent(wxEventType commandType = wxEVT_NULL, int winid = 0)
+                  : wxEvent(winid, commandType)
+    {
+        m_clientData = NULL;
+        m_isCommandEvent = true;
+
+        // the command events are propagated upwards by default
+        m_propagationLevel = wxEVENT_PROPAGATE_MAX;
+    }
+
+    // Set/Get client data from controls
+    void SetClientData(void* clientData) { m_clientData = clientData; }
+    void *GetClientData() const { return m_clientData; }
+
+    virtual wxEvent *Clone() const { return new wxCommandEvent(*this); }
+    virtual wxEventCategory GetEventCategory() const { return wxEVT_CATEGORY_USER_INPUT; }
+
+protected:
+    void*             m_clientData;    // Arbitrary client data
+};
+#endif
+
 wxDECLARE_EVENT(pxEvt_StartIdleEventTimer, wxCommandEvent);
 wxDECLARE_EVENT(pxEvt_DeleteObject, wxCommandEvent);
 wxDECLARE_EVENT(pxEvt_DeleteThread, wxCommandEvent);
-#endif
 
 typedef void FnType_Void();
 
@@ -166,7 +192,7 @@ protected:
 // --------------------------------------------------------------------------------------
 //  pxSynchronousCommandEvent
 // --------------------------------------------------------------------------------------
-#if wxUSE_GUI
+
 class pxSynchronousCommandEvent : public wxCommandEvent
 {
     wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(pxSynchronousCommandEvent);
@@ -195,7 +221,6 @@ public:
 };
 
 wxDECLARE_EVENT(pxEvt_SynchronousCommand, pxSynchronousCommandEvent);
-#endif
 
 // --------------------------------------------------------------------------------------
 //  BaseMessageBoxEvent

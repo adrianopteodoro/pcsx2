@@ -54,11 +54,11 @@ namespace Options
 static Option<std::string> bios("pcsx2_bios", "Bios"); // will be filled in retro_init()
 static Option<bool> fast_boot("pcsx2_fastboot", "Fast Boot", true);
 
-GfxOption<std::string> renderer("pcsx2_renderer", "Renderer", {"Auto",
+GfxOption<std::string> renderer("pcsx2_renderer", "Renderer", {"Auto", "OpenGL",
 #ifdef _WIN32
 															   "D3D11",
 #endif
-															   "OpenGL", "Software", "Null"});
+															   "Software", "Null"});
 
 static GfxOption<bool> frameskip("pcsx2_frameskip", "Frameskip", false);
 static GfxOption<int> frames_to_draw("pcsx2_frames_to_draw", "Frameskip: Frames to Draw", 1, 10);
@@ -427,7 +427,7 @@ void retro_get_system_info(retro_system_info* info)
 #endif
 
 	info->library_name = "pcsx2";
-	info->valid_extensions = "elf|iso|ciso|cue|bin";
+	info->valid_extensions = "elf|iso|ciso|cue|bin|gz";
 	info->need_fullpath = true;
 	info->block_extract = true;
 }
@@ -491,11 +491,12 @@ static bool set_hw_render(retro_hw_context_type type)
 
 	switch (type)
 	{
+#ifdef _WIN32
 		case RETRO_HW_CONTEXT_DIRECT3D:
 			hw_render.version_major = 11;
 			hw_render.version_minor = 0;
 			break;
-
+#endif
 		case RETRO_HW_CONTEXT_OPENGL_CORE:
 			hw_render.version_major = 3;
 			hw_render.version_minor = 3;
@@ -583,7 +584,7 @@ bool retro_load_game(const struct retro_game_info* game)
 	{
 		retro_hw_context_type context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
 		environ_cb(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &context_type);
-		if(set_hw_render(context_type))
+		if (set_hw_render(context_type))
 			return true;
 	}
 #ifdef _WIN32
@@ -599,7 +600,10 @@ bool retro_load_game(const struct retro_game_info* game)
 		return true;
 	if (set_hw_render(RETRO_HW_CONTEXT_OPENGLES3))
 		return true;
-
+#ifdef _WIN32
+	if (set_hw_render(RETRO_HW_CONTEXT_DIRECT3D))
+		return true;
+#endif
 	return false;
 }
 

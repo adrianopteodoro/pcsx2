@@ -24,10 +24,8 @@
 #include "Utilities/Console.h"
 #include "Utilities/IniInterface.h"
 #include "Utilities/SafeArray.inl"
-#ifndef __LIBRETRO__
 #include "Dialogs/LogOptionsDialog.h"
 #include "DebugTools/Debug.h"
-#endif
 
 #include <wx/textfile.h>
 
@@ -302,7 +300,7 @@ enum MenuId_LogSources_Offset
 	MenuId_LogSources_Offset_recordingConsole = 10,
 	MenuId_LogSources_Offset_controlInfo
 };
-
+#endif
 // WARNING ConsoleLogSources & ConLogDefaults must have the same size
 static ConsoleLogSource* const ConLogSources[] =
 {
@@ -368,7 +366,7 @@ void ConLog_LoadSaveSettings( IniInterface& ini )
 
 	ConLogInitialized = true;
 }
-
+#if wxUSE_GUI
 // --------------------------------------------------------------------------------------
 //  ConsoleLogFrame  (implementations)
 // --------------------------------------------------------------------------------------
@@ -1067,7 +1065,12 @@ void Pcsx2App::ProgramLog_PostEvent( wxEvent& evt )
 	if( ConsoleLogFrame* proglog = GetProgramLog() )
 		proglog->GetEventHandler()->AddPendingEvent( evt );
 }
-
+#else
+const ConsoleLogFrame* Pcsx2App::GetProgramLog() const
+{
+	return NULL;
+}
+#endif
 // --------------------------------------------------------------------------------------
 //  ConsoleImpl_ToFile
 // --------------------------------------------------------------------------------------
@@ -1126,6 +1129,7 @@ const IConsoleWriter	ConsoleWriter_File =
 	0
 };
 
+#if wxUSE_GUI
 Mutex& Pcsx2App::GetProgramLogLock()
 {
 	return m_mtx_ProgramLog;
@@ -1211,12 +1215,15 @@ static const IConsoleWriter	ConsoleWriter_WindowAndFile =
 
 	0
 };
+#else
+static const IConsoleWriter&	ConsoleWriter_Window = ConsoleWriter_Stdout;
+#endif
 
 void Pcsx2App::EnableAllLogging()
 {
 #ifdef __LIBRETRO__
 	return;
-#endif
+#else
 	AffinityAssert_AllowFrom_MainUI();
 
 	const bool logBoxOpen = (m_ptr_ProgramLog != NULL);
@@ -1240,6 +1247,7 @@ void Pcsx2App::EnableAllLogging()
 			newHandler = &ConsoleWriter_Stdout;
 	}
 	Console_SetActiveHandler( *newHandler );	
+#endif
 }
 
 // Used to disable the emuLog disk logger, typically used when disabling or re-initializing the
@@ -1270,17 +1278,16 @@ void Pcsx2App::DisableWindowLogging() const
 	Console_SetActiveHandler( (emuLog!=NULL) ? (IConsoleWriter&)ConsoleWriter_File : (IConsoleWriter&)ConsoleWriter_Stdout );
 }
 
-#endif
 void OSDlog(ConsoleColors color, bool console, const std::string& str)
 {
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 	if (GSosdLog)
 		GSosdLog(str.c_str(), wxGetApp().GetProgramLog()->GetRGBA(color));
 #endif
 	if (console)
 		Console.WriteLn(color, str.c_str());
 }
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 void OSDmonitor(ConsoleColors color, const std::string key, const std::string value) {
 	if(!GSosdMonitor) return;
 

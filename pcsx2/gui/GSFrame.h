@@ -14,6 +14,7 @@
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if wxUSE_GUI
 #pragma once
 
 #include "AppCommon.h"
@@ -133,3 +134,4 @@ protected:
 //
 #define sGSFrame \
 	if( GSFrame* __gsframe_ = wxGetApp().GetGsFramePtr() ) (*__gsframe_)
+#endif

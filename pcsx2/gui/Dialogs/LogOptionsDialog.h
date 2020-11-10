@@ -15,6 +15,7 @@
 
 #pragma once
 
+#if wxUSE_GUI
 #include "App.h"
 #include "ConfigurationDialog.h"
 
@@ -45,3 +46,4 @@ protected:
 };
 
 }	// end namespace Dialogs
+#endif

@@ -15,29 +15,25 @@
 
 #include "PrecompiledHeader.h"
 #include "App.h"
-#ifndef __LIBRETRO__
 #include "MainFrame.h"
 #include "GSFrame.h"
-#endif
 #include "GS.h"
 #include "AppSaveStates.h"
-#ifndef __LIBRETRO__
 #include "AppGameDatabase.h"
 #include "AppAccelerators.h"
-#endif
 
 #include "Plugins.h"
 #include "ps2/BiosTools.h"
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 #include "Dialogs/ModalPopups.h"
 #include "Dialogs/ConfigurationDialog.h"
 #include "Dialogs/LogOptionsDialog.h"
-#endif
-#if wxUSE_GUI
+
 #include "Debugger/DisassemblyDialog.h"
-#else
-#include "DebugTools/Breakpoints.h"
 #endif
+#include "DebugTools/Breakpoints.h"
+#include "DebugTools/SymbolMap.h"
+
 #ifndef DISABLE_RECORDING
 #	include "Recording/InputRecordingControls.h"
 #	include "Recording/InputRecording.h"
@@ -87,9 +83,7 @@ bool switchAR;
 
 static bool HandlePluginError( BaseException& ex )
 {
-#ifdef __LIBRETRO__
-	return false;
-#else
+#if wxUSE_GUI
 	if (!pxDialogExists(L"Dialog:" + Dialogs::ComponentsConfigDialog::GetNameStatic()))
 	{
 		if( !Msgbox::OkCancel( ex.FormatDisplayMessage() +
@@ -107,6 +101,8 @@ static bool HandlePluginError( BaseException& ex )
 	// TODO: Send a message to the panel to select the failed plugin.
 
 	return AppOpenModalDialog<Dialogs::ComponentsConfigDialog>(L"Plugins") != wxID_CANCEL;
+#else
+	return false;
 #endif
 }
 
@@ -151,7 +147,7 @@ void PluginErrorEvent::InvokeEvent()
 	if( !HandlePluginError( *deleteMe ) )
 	{
 		Console.Error( L"User-canceled plugin configuration; Plugins not loaded!" );
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 		Msgbox::Alert( _("Warning!  System plugins have not been loaded.  PCSX2 may be inoperable.") );
 #endif
 	}
@@ -167,7 +163,7 @@ void PluginInitErrorEvent::InvokeEvent()
 	if( !HandlePluginError( *deleteMe ) )
 	{
 		Console.Error( L"User-canceled plugin configuration after plugin initialization failure.  Plugins unloaded." );
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 		Msgbox::Alert( _("Warning!  System plugins have not been loaded.  PCSX2 may be inoperable.") );
 #endif
 	}
@@ -200,9 +196,7 @@ protected:
 
 static bool HandleBIOSError(BaseException& ex)
 {
-#ifdef __LIBRETRO__
-	return false;
-#else
+#if wxUSE_GUI
 	if (!pxDialogExists(L"Dialog:" + Dialogs::ComponentsConfigDialog::GetNameStatic()))
 	{
 		if (!Msgbox::OkCancel(ex.FormatDisplayMessage() + L"\n\n" + BIOS_GetMsg_Required()
@@ -217,6 +211,8 @@ static bool HandleBIOSError(BaseException& ex)
 	g_Conf->ComponentsTabName = L"BIOS";
 
 	return AppOpenModalDialog<Dialogs::ComponentsConfigDialog>(L"BIOS") != wxID_CANCEL;
+#else
+	return false;
 #endif
 }
 
@@ -230,12 +226,12 @@ void BIOSLoadErrorEvent::InvokeEvent()
 	if (!HandleBIOSError(*deleteMe))
 	{
 		Console.Warning("User canceled BIOS configuration.");
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 		Msgbox::Alert(_("Warning! Valid BIOS has not been selected. PCSX2 may be inoperable."));
 #endif
 	}
 }
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 // Allows for activating menu actions from anywhere in PCSX2.
 // And it's Thread Safe!
 void Pcsx2App::PostMenuAction( MenuIdentifiers menu_id ) const
@@ -302,12 +298,13 @@ protected:
 
 wxIMPLEMENT_DYNAMIC_CLASS( Pcsx2AppMethodEvent, pxActionEvent );
 
+#if wxUSE_GUI
 #ifdef __WXMSW__
 extern int TranslateVKToWXK( u32 keysym );
 #elif defined( __WXGTK__ )
 extern int TranslateGDKtoWXK( u32 keysym );
 #endif
-#ifndef __LIBRETRO__
+
 void Pcsx2App::PadKeyDispatch( const keyEvent& ev )
 {
 	m_kevt.SetEventType( ( ev.evt == KEYPRESS ) ? wxEVT_KEY_DOWN : wxEVT_KEY_UP );
@@ -371,7 +368,7 @@ void Pcsx2App::PadKeyDispatch( const keyEvent& ev )
 // command line help message in cmd/powershell/mingw bash. It can be done in English
 // locales ( using AttachConsole, WriteConsole, FreeConsole combined with
 // wxMessageOutputStderr), but completely fails for some other languages (i.e. Japanese).
-#if defined(_WIN32) && !defined(__LIBRETRO__)
+#if wxUSE_GUI && defined(_WIN32)
 class pxMessageOutputMessageBox : public wxMessageOutput
 {
 public:
@@ -444,8 +441,7 @@ wxMessageOutput* Pcsx2AppTraits::CreateMessageOutput()
 // --------------------------------------------------------------------------------------
 //  Pcsx2StandardPaths
 // --------------------------------------------------------------------------------------
-#ifndef __LIBRETRO__
-#ifdef wxUSE_STDPATHS
+#if defined(wxUSE_STDPATHS) && !defined(__LIBRETRO__)
 class Pcsx2StandardPaths : public wxStandardPaths
 {
 public:
@@ -493,7 +489,7 @@ wxStandardPaths& Pcsx2AppTraits::GetStandardPaths()
 	return stdPaths;
 }
 #endif
-#endif
+
 wxAppTraits* Pcsx2App::CreateTraits()
 {
 	return new Pcsx2AppTraits;
@@ -559,7 +555,7 @@ void DoFmvSwitch(bool on)
 		} else {
 			switchAR = false;
 		}
-#ifndef __LIBRETRO__
+#if wxUSE_GUI
 		if (GSFrame* gsFrame = wxGetApp().GetGsFramePtr())
 			if (GSPanel* viewport = gsFrame->GetViewport())
 				viewport->DoResize();
@@ -988,9 +984,10 @@ SysMainMemory& Pcsx2App::GetVmReserve()
 	if (!m_VmReserve) m_VmReserve = std::unique_ptr<SysMainMemory>(new SysMainMemory());
 	return *m_VmReserve;
 }
-#ifndef __LIBRETRO__
+
 void Pcsx2App::OpenGsPanel()
 {
+#if wxUSE_GUI
 	if( AppRpc_TryInvoke( &Pcsx2App::OpenGsPanel ) ) return;
 
 	GSFrame* gsFrame = GetGsFramePtr();
@@ -1079,10 +1076,12 @@ void Pcsx2App::OpenGsPanel()
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_TogglePause, true);
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_ToggleRecordingMode, g_InputRecording.IsActive());
 #endif
+#endif
 }
 
 void Pcsx2App::CloseGsPanel()
 {
+#if wxUSE_GUI
 	if( AppRpc_TryInvoke( &Pcsx2App::CloseGsPanel ) ) return;
 
 	if (CloseViewportWithPlugins)
@@ -1097,8 +1096,10 @@ void Pcsx2App::CloseGsPanel()
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_TogglePause, false);
 	sMainFrame.enableRecordingMenuItem(MenuId_Recording_ToggleRecordingMode, false);
 #endif
+#endif
 }
 
+#ifndef __LIBRETRO__
 void Pcsx2App::OnGsFrameClosed( wxWindowID id )
 {
 	if( (m_id_GsFrame == wxID_ANY) || (m_id_GsFrame != id) ) return;
@@ -1189,9 +1190,7 @@ protected:
 		DbgCon.WriteLn( Color_Gray, "(SysExecute) received." );
 
 		CoreThread.ResetQuick();
-#if wxUSE_GUI
 		symbolMap.Clear();
-#endif
 		CBreakPoints::SetSkipFirst(0);
 
 		CDVDsys_SetFile(CDVD_SourceType::Iso, g_Conf->CurrentIso );
