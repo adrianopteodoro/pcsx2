@@ -20,6 +20,9 @@
 #include "GS.h"
 #include "GSFrame.h"
 #include "SPU2/spu2.h"
+#include "System/SysThreads.h"
+#include "DEV9/DEV9.h"
+#include "USB/USB.h"
 
 #include "ConsoleLogger.h"
 #include "MainFrame.h"
@@ -57,7 +60,17 @@ void MainEmuFrame::Menu_McdSettings_Click(wxCommandEvent& event)
 	AppOpenModalDialog<McdConfigDialog>(wxEmptyString, this);
 }
 
-void MainEmuFrame::Menu_WindowSettings_Click(wxCommandEvent& event)
+void MainEmuFrame::Menu_NetworkSettings_Click(wxCommandEvent &event)
+{
+	DEV9configure();
+}
+
+void MainEmuFrame::Menu_USBSettings_Click(wxCommandEvent& event)
+{
+	USBconfigure();
+}
+
+void MainEmuFrame::Menu_WindowSettings_Click(wxCommandEvent &event)
 {
 	wxCommandEvent evt(pxEvt_SetSettingsPage);
 	evt.SetString(L"GS Window");
@@ -164,6 +177,7 @@ wxWindowID SwapOrReset_Iso(wxWindow* owner, IScopedCoreThread& core_control, con
 		}
 	}
 
+	g_CDVDReset = true;
 	g_Conf->CdvdSource = CDVD_SourceType::Iso;
 	SysUpdateIsoSrcFile(isoFilename);
 
@@ -258,6 +272,7 @@ wxWindowID SwapOrReset_CdvdSrc(wxWindow* owner, CDVD_SourceType newsrc)
 		}
 	}
 
+	g_CDVDReset = true;
 	CDVD_SourceType oldsrc = g_Conf->CdvdSource;
 	g_Conf->CdvdSource = newsrc;
 
@@ -914,6 +929,26 @@ void MainEmuFrame::Menu_Capture_Screenshot_Screenshot_Click(wxCommandEvent& even
 		return;
 	}
 	GSmakeSnapshot(g_Conf->Folders.Snapshots.ToAscii().data());
+}
+
+void MainEmuFrame::Menu_Capture_Screenshot_Screenshot_As_Click(wxCommandEvent &event)
+{
+	if (!CoreThread.IsOpen())
+		return;
+
+	// Ensure emulation is paused so that the correct image is captured
+	bool wasPaused = CoreThread.IsPaused();
+	if (!wasPaused)
+		CoreThread.Pause();
+
+	wxFileDialog fileDialog(this, _("Select a file"), g_Conf->Folders.Snapshots.ToAscii(), wxEmptyString, "PNG files (*.png)|*.png", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+	if (fileDialog.ShowModal() == wxID_OK)
+		GSmakeSnapshot(fileDialog.GetPath());
+
+	// Resume emulation
+	if (!wasPaused)
+		CoreThread.Resume();
 }
 
 #ifndef DISABLE_RECORDING

@@ -561,11 +561,6 @@ void DoFmvSwitch(bool on)
 				viewport->DoResize();
 #endif
 	}
-	if (EmuConfig.Gamefixes.FMVinSoftwareHack) {
-		ScopedCoreThreadPause paused_core(new SysExecEvent_SaveSinglePlugin(PluginId_GS));
-		renderswitch = !renderswitch;
-		paused_core.AllowResume();
-	}
 }
 
 void Pcsx2App::LogicalVsync()
@@ -578,7 +573,7 @@ void Pcsx2App::LogicalVsync()
 
 	FpsManager.DoFrame();
 
-	if (EmuConfig.Gamefixes.FMVinSoftwareHack || g_Conf->GSWindow.FMVAspectRatioSwitch != FMV_AspectRatio_Switch_Off) {
+	if (g_Conf->GSWindow.FMVAspectRatioSwitch != FMV_AspectRatio_Switch_Off) {
 		if (EnableFMV) {
 			DevCon.Warning("FMV on");
 			DoFmvSwitch(true);

@@ -73,23 +73,18 @@ typedef struct _keyEvent
 
 ///////////////////////////////////////////////////////////////////////
 
-#if defined(GSdefs) || defined(PADdefs) || defined(SIOdefs) ||     \
-    defined(DEV9defs) || defined(USBdefs)
+#if defined(GSdefs) || defined(PADdefs) || defined(SIOdefs)
 #define COMMONdefs
 #endif
 
 // PS2EgetLibType returns (may be OR'd)
 #define PS2E_LT_GS 0x01
 #define PS2E_LT_PAD 0x02 // -=[ OBSOLETE ]=-
-#define PS2E_LT_DEV9 0x10
-#define PS2E_LT_USB 0x20
 #define PS2E_LT_SIO 0x80
 
 // PS2EgetLibVersion2 (high 16 bits)
 #define PS2E_GS_VERSION 0x0006
 #define PS2E_PAD_VERSION 0x0002 // -=[ OBSOLETE ]=-
-#define PS2E_DEV9_VERSION 0x0003
-#define PS2E_USB_VERSION 0x0003
 #define PS2E_SIO_VERSION 0x0001
 #ifdef COMMONdefs
 
@@ -123,12 +118,6 @@ typedef char __keyEvent_Size__[(sizeof(keyEvent) == 8) ? 1 : -1];
 #define SIO_TYPE_MC 0x00000100
 
 typedef int(CALLBACK *SIOchangeSlotCB)(int slot);
-
-typedef void (*DEV9callback)(int cycles);
-typedef int (*DEV9handler)(void);
-
-typedef void (*USBcallback)(int cycles);
-typedef int (*USBhandler)(void);
 
 typedef struct _GSdriverInfo
 {
@@ -373,7 +362,7 @@ typedef void(CALLBACK *_GSsetExclusive)(int isExclusive);
 typedef std::wstring*(CALLBACK *_GSsetupRecording)(int);
 typedef void(CALLBACK *_GSreset)();
 typedef void(CALLBACK *_GSwriteCSR)(u32 value);
-typedef void(CALLBACK *_GSmakeSnapshot)(const char *path);
+typedef bool(CALLBACK *_GSmakeSnapshot)(const char *path);
 typedef void(CALLBACK *_GSmakeSnapshot2)(const char *path, int *, int);
 
 // PAD
@@ -388,38 +377,6 @@ typedef void(CALLBACK *_PADgsDriverInfo)(GSdriverInfo *info);
 typedef s32(CALLBACK *_PADsetSlot)(u8 port, u8 slot);
 typedef s32(CALLBACK *_PADqueryMtap)(u8 port);
 typedef void(CALLBACK *_PADWriteEvent)(keyEvent &evt);
-
-// DEV9
-// NOTE: The read/write functions CANNOT use XMM/MMX regs
-// If you want to use them, need to save and restore current ones
-typedef s32(CALLBACK *_DEV9open)(void *pDsp);
-typedef u8(CALLBACK *_DEV9read8)(u32 mem);
-typedef u16(CALLBACK *_DEV9read16)(u32 mem);
-typedef u32(CALLBACK *_DEV9read32)(u32 mem);
-typedef void(CALLBACK *_DEV9write8)(u32 mem, u8 value);
-typedef void(CALLBACK *_DEV9write16)(u32 mem, u16 value);
-typedef void(CALLBACK *_DEV9write32)(u32 mem, u32 value);
-typedef void(CALLBACK *_DEV9readDMA8Mem)(u32 *pMem, int size);
-typedef void(CALLBACK *_DEV9writeDMA8Mem)(u32 *pMem, int size);
-typedef void(CALLBACK *_DEV9irqCallback)(DEV9callback callback);
-typedef DEV9handler(CALLBACK *_DEV9irqHandler)(void);
-typedef void(CALLBACK *_DEV9async)(u32 cycles);
-
-// USB
-// NOTE: The read/write functions CANNOT use XMM/MMX regs
-// If you want to use them, need to save and restore current ones
-typedef s32(CALLBACK *_USBopen)(void *pDsp);
-typedef u8(CALLBACK *_USBread8)(u32 mem);
-typedef u16(CALLBACK *_USBread16)(u32 mem);
-typedef u32(CALLBACK *_USBread32)(u32 mem);
-typedef void(CALLBACK *_USBwrite8)(u32 mem, u8 value);
-typedef void(CALLBACK *_USBwrite16)(u32 mem, u16 value);
-typedef void(CALLBACK *_USBwrite32)(u32 mem, u32 value);
-typedef void(CALLBACK *_USBasync)(u32 cycles);
-
-typedef void(CALLBACK *_USBirqCallback)(USBcallback callback);
-typedef USBhandler(CALLBACK *_USBirqHandler)(void);
-typedef void(CALLBACK *_USBsetRAM)(void *mem);
 #endif
 
 #ifdef PLUGINfuncs
@@ -467,38 +424,6 @@ extern _PADgsDriverInfo PADgsDriverInfo;
 extern _PADsetSlot PADsetSlot;
 extern _PADqueryMtap PADqueryMtap;
 extern _PADWriteEvent PADWriteEvent;
-#endif
-
-// DEV9
-#ifndef BUILTIN_DEV9_PLUGIN
-extern _DEV9open DEV9open;
-extern _DEV9read8 DEV9read8;
-extern _DEV9read16 DEV9read16;
-extern _DEV9read32 DEV9read32;
-extern _DEV9write8 DEV9write8;
-extern _DEV9write16 DEV9write16;
-extern _DEV9write32 DEV9write32;
-extern _DEV9readDMA8Mem DEV9readDMA8Mem;
-extern _DEV9writeDMA8Mem DEV9writeDMA8Mem;
-extern _DEV9irqCallback DEV9irqCallback;
-extern _DEV9irqHandler DEV9irqHandler;
-extern _DEV9async DEV9async;
-#endif
-
-// USB
-#ifndef BUILTIN_USB_PLUGIN
-extern _USBopen USBopen;
-extern _USBread8 USBread8;
-extern _USBread16 USBread16;
-extern _USBread32 USBread32;
-extern _USBwrite8 USBwrite8;
-extern _USBwrite16 USBwrite16;
-extern _USBwrite32 USBwrite32;
-extern _USBasync USBasync;
-
-extern _USBirqCallback USBirqCallback;
-extern _USBirqHandler USBirqHandler;
-extern _USBsetRAM USBsetRAM;
 #endif
 
 #endif

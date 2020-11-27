@@ -44,6 +44,8 @@ protected:
 };
 #endif
 
+#include <wx/event.h>
+
 wxDECLARE_EVENT(pxEvt_StartIdleEventTimer, wxCommandEvent);
 wxDECLARE_EVENT(pxEvt_DeleteObject, wxCommandEvent);
 wxDECLARE_EVENT(pxEvt_DeleteThread, wxCommandEvent);

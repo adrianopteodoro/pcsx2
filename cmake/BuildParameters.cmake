@@ -50,11 +50,12 @@ option(BUILD_REPLAY_LOADERS "Build GS replayer to ease testing (developer option
 option(PACKAGE_MODE "Use this option to ease packaging of PCSX2 (developer/distribution option)")
 option(DISABLE_CHEATS_ZIP "Disable including the cheats_ws.zip file")
 option(DISABLE_PCSX2_WRAPPER "Disable including the PCSX2-linux.sh file")
+option(DISABLE_SETCAP "Do not set files capabilities")
 option(XDG_STD "Use XDG standard path instead of the standard PCSX2 path")
 option(EXTRA_PLUGINS "Build various 'extra' plugins")
 option(PORTAUDIO_API "Build portaudio support on spu2x" ON)
 option(SDL2_API "Use SDL2 on spu2x and onepad (wxWidget mustn't be built with SDL1.2 support" ON)
-option(GTK3_API "Use GTK3 api (experimental/wxWidget must be built with GTK3 support)")
+option(GTK2_API "Use GTK2 api (legacy)")
 
 if(PACKAGE_MODE)
     if(NOT DEFINED PLUGIN_DIR)
@@ -329,10 +330,20 @@ endif()
 # -Wno-unused-function: warn for function not used in release build
 # -Wno-unused-value: lots of warning for this kind of statements "0 && ...". There are used to disable some parts of code in release/dev build.
 # -Wno-overloaded-virtual: Gives a fair number of warnings under clang over in the wxwidget gui section of the code.
-set(DEFAULT_WARNINGS "-Wall -Wextra -Wno-attributes -Wno-unused-function -Wno-unused-parameter -Wno-missing-field-initializers -Wno-overloaded-virtual")
+# -Wno-deprecated-declarations: The USB plugins dialogs are written in straight gtk 2, which gives a million deprecated warnings. Suppress them until we can deal with them.
+# -Wno-format: Yeah, these need to be taken care of, but...
+# -Wno-stringop-truncation: Who comes up with these compiler warnings, anyways?
+# -Wno-stringop-overflow: Probably the same people as this one...
+
+set(DEFAULT_WARNINGS "-Wall -Wextra -Wno-attributes -Wno-unused-function -Wno-unused-parameter -Wno-missing-field-initializers -Wno-overloaded-virtual -Wno-deprecated-declarations -Wno-format")
 if (NOT USE_ICC)
     set(DEFAULT_WARNINGS "${DEFAULT_WARNINGS} -Wno-unused-value ")
 endif()
+
+if (USE_GCC)
+set(DEFAULT_WARNINGS "${DEFAULT_WARNINGS}  -Wno-stringop-truncation  -Wno-stringop-overflow ")
+endif()
+
 
 # -Wstrict-aliasing=n: to fix one day aliasing issue. n=1/2/3
 if (USE_ICC)
@@ -418,7 +429,8 @@ if(USE_CLANG)
 endif()
 
 # Note: -DGTK_DISABLE_DEPRECATED can be used to test a build without gtk deprecated feature. It could be useful to port to a newer API
-set(DEFAULT_GCC_FLAG "${ARCH_FLAG} ${COMMON_FLAG} ${DEFAULT_WARNINGS} ${AGGRESSIVE_WARNING} ${HARDENING_FLAG} ${DEBUG_FLAG} ${ASAN_FLAG} ${OPTIMIZATION_FLAG} ${LTO_FLAGS} ${PGO_FLAGS} ${PLUGIN_SUPPORT}")
+# Disabling the hardening flags for the moment, as they spam quite a bit. ${HARDENING_FLAG}
+set(DEFAULT_GCC_FLAG "${ARCH_FLAG} ${COMMON_FLAG} ${DEFAULT_WARNINGS} ${AGGRESSIVE_WARNING} ${DEBUG_FLAG} ${ASAN_FLAG} ${OPTIMIZATION_FLAG} ${LTO_FLAGS} ${PGO_FLAGS} ${PLUGIN_SUPPORT}")
 # c++ only flags
 if(NOT MSVC)
 set(DEFAULT_CPP_FLAG "${DEFAULT_GCC_FLAG} -Wno-invalid-offsetof")
@@ -463,16 +475,6 @@ if(DEFINED USER_CMAKE_CXX_FLAGS)
 endif()
 # Use some default machine flags
 string(STRIP "${CMAKE_CXX_FLAGS} ${DEFAULT_CPP_FLAG}" CMAKE_CXX_FLAGS)
-
-#-------------------------------------------------------------------------------
-# Too much user/packager use experimental flags as release flags
-#-------------------------------------------------------------------------------
-if(CMAKE_BUILD_TYPE MATCHES "Release" OR PACKAGE_MODE)
-    if (GTK3_API)
-        message(WARNING "GTK3 is highly experimental besides it requires a wxWidget built with __WXGTK3__ support !!!")
-    endif()
-endif()
-
 
 #-------------------------------------------------------------------------------
 # MacOS-specific things

@@ -21,6 +21,8 @@
 #include "PrecompiledHeader.h"
 #include "IopCommon.h"
 #include "SPU2/spu2.h"
+#include "DEV9/DEV9.h"
+#include "USB/USB.h"
 
 #include <math.h>
 
@@ -148,12 +150,9 @@ void psxRcntInit()
 	psxCounters[6].CycleT = psxCounters[6].rate;
 	psxCounters[6].mode = 0x8;
 
-	if (USBasync != NULL)
-	{
-		psxCounters[7].rate = PSXCLK / 1000;
-		psxCounters[7].CycleT = psxCounters[7].rate;
-		psxCounters[7].mode = 0x8;
-	}
+	psxCounters[7].rate = PSXCLK / 1000;
+	psxCounters[7].CycleT = psxCounters[7].rate;
+	psxCounters[7].mode = 0x8;
 
 	for (i = 0; i < 8; i++)
 		psxCounters[i].sCycleT = psxRegs.cycle;
@@ -514,6 +513,7 @@ void psxRcntUpdate()
 	else
 		c -= difference;
 	psxNextCounter = c;
+
 #ifndef BUILTIN_DEV9_PLUGIN
 	if (DEV9async)
 #endif
@@ -524,19 +524,19 @@ void psxRcntUpdate()
 	if (USBasync)
 #endif
 	{
-		const s32 difference = psxRegs.cycle - psxCounters[7].sCycleT;
-		s32 c = psxCounters[7].CycleT;
+		const s32 diffusb = psxRegs.cycle - psxCounters[7].sCycleT;
+		s32 cusb = psxCounters[7].CycleT;
 
-		if (difference >= psxCounters[7].CycleT)
+		if (diffusb >= psxCounters[7].CycleT)
 		{
-			USBasync(difference);
+			USBasync(diffusb);
 			psxCounters[7].sCycleT = psxRegs.cycle;
 			psxCounters[7].CycleT = psxCounters[7].rate;
 		}
 		else
-			c -= difference;
-		if (c < psxNextCounter)
-			psxNextCounter = c;
+			cusb -= diffusb;
+		if (cusb < psxNextCounter)
+			psxNextCounter = cusb;
 	}
 
 	for (i = 0; i < 6; i++)
